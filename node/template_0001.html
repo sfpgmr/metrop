@@ -10,11 +10,13 @@
   <link rel="stylesheet" href="/css/main.min.css" />
 </head>
 <body>
+  <header class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <h2 id="headLine" property="headLine">東京メトロAPIテスト（路線図を描く）</h2>
+    </div>
+  </header>
   <div id="content" class="container">
     <article id="article" typeof="Article">
-      <header>
-        <h1 id="headLine" property="headLine">東京メトロAPIテスト（路線図を描く）</h1>
-      </header>
       <div property="articleBody" id="articleBody">
         <%- @articleBody %>
       </div>

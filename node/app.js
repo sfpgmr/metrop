@@ -65,7 +65,7 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     return result;
 })
 // 東京との境界図をロードする
-.then(q.nfbind(fs.readFile ,'data/tokyo23.json','utf-8'))
+.then(q.nfbind(fs.readFile ,'data/tokyo-to.json','utf-8'))
 .then(function (jsonString) {
     var json = JSON.parse(jsonString);
 //    document = jsdom.jsdom(htmlFile);
@@ -89,7 +89,6 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
       .append('path')
       .attr('d', path)
       .attr('fill', function (d) {
-        // 適当に色を塗るなど
         return 'none';
         //return 'rgba(128,128,128,0.15)';
        })
@@ -105,7 +104,6 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
       .append('path')
       .attr('d', path)
       .attr('fill', function (d) {
-            // 適当に色を塗るなど
             return 'none';
         })
       .attr('stroke',lineColor[gj.railWayData['odpt:lineCode']])
