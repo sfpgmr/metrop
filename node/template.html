@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" vocab="http://schema.org">
+<head>
+  <title><%= @headLine %></title>
+  <meta charset="utf-8" />
+  <meta name="description" content="<%= @description %>" />
+  <meta name="keywords" content="<%= @keywords %>" />
+  <meta name="author" content="<%= @author %>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="/css/main.min.css" />
+  <% if @canonical? : %>
+  <link rel="canonical" href="<%= @canonical %>" />
+  <% end %>
+  <link rel="start" title="StartPage" href="/" />
+  <link rel="contents" title="目次" href="/" />
+  <link rel="search" href="/search/" />
+  <link rel="help" href="/help/" />
+  <% if @prevPageURL? : %>
+  <link rel="prev" title="前のページ" href="<%= @prevPageURL %>" />
+  <% end %>
+
+  <% if @nextPageURL? : %>
+  <link rel="next" title="次のページ" href="<%= @nextPageURL %>" />
+  <% end %>
+  <% if @atom? : %>
+  <link rel="alternate" type="application/atom+xml" href="<%=@atom %>" />
+  <% end %>
+  <% if @md? : %>
+  <link id="markdown" rel="alternate" type="text/plain" href="<%=@md %>" />
+  <% end %>
+  <% if @header? :  %>
+  <%- @header %>
+  <% end %>
+  <script id="jsonLD" type="application/ld+json">
+    <%- @jsonLD %>
+  </script>
+  <script data-main="/js/main" src="/js/require.js"></script>
+</head>
+<body>
+  <section id="loading" class="alert alert-info">
+    Loading Contents
+  </section>
+  <section id="content">
+    <article id="article" typeof="BlogPosting">
+      <header>
+        <h1 id="headLine" property="headLine"><%= @headLine %></h1>
+        <time datetime="<%- @dateCreated %>" id="dateCreated" property="dateCreated"><%- @dateCreated %></time>
+        <time datetime="<%- @dateModified %>" id="dateModified" property="dateModified"><%- @dateModified %></time>
+        <time datetime="<%- @datePublished %>" id="datePublished" property="datePublished"><%- @datePublished %></time>
+        <div property="genre" id="genre"></div>
+      </header>
+      <div property="articleBody" id="articleBody">
+        <%- @articleBody %>
+      </div>
+      <footer id="footer">
+        <div property="creator" id="creator">
+          <div typeof="person" id="creatorPerson">
+            <div property="name" id="creatorName"><%= @creatorName %></div>
+            <div property="url" id="creatorURL"><%= @creatorURL %></div>
+          </div>
+        </div>
+      </footer>
+    </article>
+  </section>
+</body>
+</html>
