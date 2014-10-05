@@ -11,6 +11,7 @@ var apiUrl = 'https://api.tokyometroapp.jp/api/v2/';
 //var reg = new RegExp('rdf\\:type\\=odpt\\:([^\\&]*)');
 var reg = new RegExp('.*\\/v2\\/([^\\/\\?]*)(.*)$');
 var railWayGeoJsons = [];
+var stationGeoJsons = [];
 var template = null;
 
 // 各線の色情報
@@ -52,7 +53,7 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     return q.all(promises);
 })
 .then(function (d) {
-    // 路線データ 駅データの取得完了
+    // 路線描画 geoJsonデータの取得
     var railWays = d[0];
     var result = q(0);
     railWays.forEach(function (railWay) {
@@ -60,6 +61,15 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
         .then(function () { return callMetroAPICached(railWay['ug:region'], apiKey); })
         .then(function (json) {
             railWayGeoJsons.push({ title: railWay['dc:title'],railWayData:railWay, geometry: JSON.parse(json) });
+        });
+    });
+    // 駅位置データ取得
+    var stations = d[1];
+    stations.forEach(function (st) {
+        result = result
+        .then(q.fbind(callMetroAPICached, st['ug:region'], apiKey))
+        .then(function (json) {
+            stationGeoJsons.push({ title: st['dc:title'], stationData: st, geometry: JSON.parse(json) });
         });
     });
     return result;
@@ -70,20 +80,23 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var json = JSON.parse(jsonString);
 //    document = jsdom.jsdom(htmlFile);
 //    window = document.parentWindow;
-    var width = 1024,
-        height = 768;
+    var width = 1920,
+        height = 1080;
     var svg = d3.select('body').append('svg')
-        .attr('width', width)
-        .attr('height', height);
-    var g = svg.append('g');
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('id', 'metroMap');
     
     var projection = d3.geo.mercator()
-            .scale(100000)
-            .center([139.76,35.67])
+            .scale(150000)
+            .center([139.76,35.67]);
 //            .center(d3.geo.centroid(json))
-            .translate([width / 2, height / 2]);
+//            .translate([width / 2, height / 2]);
+           
     var path = d3.geo.path().projection(projection);
-    g.selectAll('path')
+    svg.append('g')
+      .attr('id','tokyoMap')
+      .selectAll('path')
       .data(json.features)
       .enter()
       .append('path')
@@ -94,21 +107,43 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
        })
       .attr('stroke', 'black');
     
-    railWayGeoJsons.forEach(function (gj) {
-      var g1 = svg.append('g');
-        console.log(gj.railWayData['dc:title']);
-        console.log(gj.railWayData['odpt:lineCode']);
-        g1.selectAll('path')
-      .data([gj.geometry])
-      .enter()
-      .append('path')
-      .attr('d', path)
-      .attr('fill', function (d) {
-            return 'none';
-        })
-      .attr('stroke',lineColor[gj.railWayData['odpt:lineCode']])
-      .attr('stroke-width', '4');
+    
+    svg
+    .append('g')
+    .attr('id', 'railWays')
+    .selectAll('path')
+    .data(railWayGeoJsons)
+    .enter()
+    .append('path')
+    .attr('d', function (d) {
+        return path(d.geometry);
+    })
+    .attr('fill', 'none')
+    .attr('stroke', function (d) { return lineColor[d.railWayData['odpt:lineCode']]; })
+    .attr('stroke-width', '5');
+
+    
+    // 駅位置の表示
+    stationGeoJsons.forEach(function (gj) {
+        
+        //console.log(gj.stationData['dc:title']);
+        var ppos = projection(gj.geometry.coordinates);
+        var px = ppos[0];
+        var py = ppos[1];
+        svg.append('circle')
+        .attr('cx', px)
+        .attr('cy', py)
+        .attr('r' , '2')
+        .attr('fill', 'white');
+
+        svg.append('text')
+        .attr('x',px)
+        .attr('y', py)
+        .style('font-size', '4px')
+        .style('text-anchor', 'left')
+        .text(gj.stationData['dc:title']);
     });
+
     var svgData = d3.select('body').node().innerHTML;
     var renderer = ect({ root : './' });
     var data = { articleBody: svgData };
@@ -150,7 +185,7 @@ function callMetroAPI(url, apiKey) {
     return d.promise;
 }
 
-// ローカルキャッシュ月のAPI呼び出し
+// ローカルキャッシュ付きのAPI呼び出し
 function callMetroAPICached(url, apiKey) {
     var s = reg.exec(url);
     var dir = './data/' + s[1];

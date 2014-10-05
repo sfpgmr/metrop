@@ -6,8 +6,9 @@
   <meta name="description" content="路線図を描く" />
   <meta name="keywords" content="東京メトロAPI" />
   <meta name="author" content="sfpgmr" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="/css/main.min.css" />
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js" data-main="Scripts/main.js"></script>
 </head>
 <body>
   <header class="navbar navbar-default navbar-fixed-top">
@@ -15,13 +16,11 @@
       <h2 id="headLine" property="headLine">東京メトロAPIテスト（路線図を描く）</h2>
     </div>
   </header>
-  <div id="content" class="container">
     <article id="article" typeof="Article">
-      <div property="articleBody" id="articleBody">
+      <div property="articleBody" id="articleBody" class="container">
         <%- @articleBody %>
       </div>
     </article>
-  </div>
   <footer id="footer" class="navbar navbar-default navbar-fixed-bottom">
     <div property="creator" id="creator" class="container">
       <div typeof="person" id="creatorPerson">
