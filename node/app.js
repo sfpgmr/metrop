@@ -85,12 +85,11 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var svg = d3.select('body').append('svg')
         .attr('width', '100%')
         .attr('height', '100%')
-        .attr('id', 'metroMap');
-    
+        .attr('id', 'metroMap').append('g').append('g');
     var projection = d3.geo.mercator()
-            .scale(150000)
-            .center([139.76,35.67]);
-//            .center(d3.geo.centroid(json))
+            .scale(200000)
+            .center([139.845,35.65]);
+//            .center(d3.geo.centroid(json));
 //            .translate([width / 2, height / 2]);
            
     var path = d3.geo.path().projection(projection);
@@ -124,19 +123,20 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
 
     
     // 駅位置の表示
+    var gst = svg.append('g');
     stationGeoJsons.forEach(function (gj) {
         
         //console.log(gj.stationData['dc:title']);
         var ppos = projection(gj.geometry.coordinates);
         var px = ppos[0];
         var py = ppos[1];
-        svg.append('circle')
+        gst.append('circle')
         .attr('cx', px)
         .attr('cy', py)
         .attr('r' , '2')
         .attr('fill', 'white');
 
-        svg.append('text')
+        gst.append('text')
         .attr('x',px)
         .attr('y', py)
         .style('font-size', '4px')
@@ -148,7 +148,7 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var renderer = ect({ root : './' });
     var data = { articleBody: svgData };
 
-    return q.nfcall(fs.writeFile, '../html/out.html', renderer.render('template_0001.html',data), 'utf-8');
+    return q.nfcall(fs.writeFile, '../html/index.html', renderer.render('template_0001.html',data), 'utf-8');
 })
 .then(function () {
     console.log('### 処理終了 ###');
