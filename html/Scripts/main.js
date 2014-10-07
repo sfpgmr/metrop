@@ -24,26 +24,35 @@ function (q, jq) {
     var svg = d3.select('#metroMap')
     var rect = svg.node().getBBox();
     var rectC = svg.node().getBoundingClientRect();
-    var sx = (rect.width - rectC.width) / 2 - rect.x;
-    var sy = (rect.height - rectC.height) / 2 - rect.y;
+    var sx = (rectC.width - rect.width) / 2 - rect.x;
+    var sy = (rectC.height - rect.height) / 2 - rect.y;
     svg
-    .attr('viewBox', ''+ sx +  ' ' + sy +' '  + rectC.width + ' ' + rectC.height)
-    .attr('preserveAspectRatio', 'xMinYMin slice');;
-
+    .attr('viewBox', ''+ -sx +  ' ' + -sy +' '  + (rectC.width) + ' ' + (rectC.height))
+    .attr('preserveAspectRatio', 'xMinYMin slice');
+    var zoom = d3.behavior.zoom()
+      .scaleExtent([1, 8])
+      .on("zoom", zoomed);
     var g = svg.select('g');
-    g.call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom));
-    var g1 = g.select('g');
-    g1.append('rect')
+    svg.append('rect')
     .attr("class", 'overlay')
-      .attr("x", rect.x)
-      .attr("y",rect.y)
     .attr("width", rect.width)
     .attr("height", rect.height);
-    function zoom() {
+    svg
+    .call(zoom);
+    var g1 = g.select('g');
+    g1
+    .attr('x', sx)
+    .attr('y', sy);
+    function zoomed() {
       g1.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
  //     d3.event.stopPropagation();
 //      console.log(d3.event.translate);
     }
+
+    function stopped() {
+      if (d3.event.defaultPrevented) d3.event.stopPropagation();
+    }
+
     //var rect = svg.node().getBBox();
     //var rectC = svg.node().getBoundingClientRect();
     console.log(rect);

@@ -146,7 +146,10 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
 
     var svgData = d3.select('body').node().innerHTML;
     var renderer = ect({ root : './' });
-    var data = { articleBody: svgData };
+    var data = {
+        title : '東京メトロAPIテスト(Zoom機能の実装)',
+        articleBody: svgData
+    };
 
     return q.nfcall(fs.writeFile, '../html/index.html', renderer.render('template_0001.html',data), 'utf-8');
 })
