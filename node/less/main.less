@@ -1,4 +1,4 @@
-﻿@import url('https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css');
+﻿@import url('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css');
 html {
   position: relative;
   height: 100%;
@@ -30,3 +30,112 @@ body {
     margin-right:auto;
 }
 
+.metro-image {
+    display:inline;
+    padding:2px;
+}
+
+.tab-small {
+    font-size:10px;
+}
+
+.line {
+min-width:70px;
+}
+
+.station-marker {
+    fill : none;
+    stroke :white; 
+    stroke-width : 4;
+    stroke-linecap : round;
+}
+
+.station-marker:hover {
+    stroke-width : 5;
+}
+
+.train-marker {
+    fill : orangered;
+    opacity : 0.75;
+}
+
+.train-marker-reverse {
+    fill : blue;
+    opacity : 0.75;
+}
+
+.train-marker-error {
+    .blink-train;
+}
+
+.train-marker:hover {
+    stroke-width:1px;
+    fill:red;
+}
+
+@keyframes blink-train {
+  75% { opacity: 1.0; }
+}
+
+@-webkit-keyframes blink-train {
+  75% { opacity: 1.0; }
+}
+
+.blink-train(@interval: 1.0s){
+  animation: blink-train @interval  infinite alternate;
+  -webkit-animation: blink-train @interval  infinite alternate;
+}
+
+
+@keyframes blink {
+  100% { color: red; }
+}
+
+@-webkit-keyframes blink {
+  100% { color: red; }
+}
+
+.blink {
+  animation: blink 0.5s infinite alternate;
+  -webkit-animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink-line {
+  100% { opacity: 0.5; }
+}
+
+@-webkit-keyframes blink-line {
+  100% {  opacity: 0.5; }
+}
+
+.blink-line {
+  animation: blink-line 0.5s infinite alternate ;
+  -webkit-animation: blink-line 0.5s infinite alternate ;
+}
+
+/* 時刻表 */
+#stationInfoTabContent table.timeTable {
+    font-size:11px;
+    tbody {
+        tr{
+
+            td{
+                margin: 1px 3px 1px 3px;
+                text-align:left;
+                div {
+                    text-align:center;
+                    display:inline-block;
+                    min-width: 20px; 
+                    min-height: 30px;
+                }
+
+            }
+
+        }
+
+    }
+
+}
+.modal {
+    height:100% !important;
+}

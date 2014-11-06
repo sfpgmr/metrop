@@ -7,8 +7,8 @@
   <meta name="keywords" content="東京メトロAPI" />
   <meta name="author" content="sfpgmr" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="./css/main.min.css" />
-  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js" data-main="./Scripts/main.js"></script>
+  <link rel="stylesheet" href="css/main.min.css" />
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js" data-main="Scripts/main.js"></script>
   <script type="text/javascript">
   if (!location.href.match(/localhost/)) {
     var _gaq = _gaq || [];
@@ -24,23 +24,82 @@
   </script>
 </head>
 <body>
-  <header class="navbar navbar-default navbar-fixed-top">
+  <header class="navbar navbar-default navbar-fixed-top " role="navigation">
     <div class="container">
-      <h2 id="headLine" property="headLine"><%= @title %></h2>
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#" property="headLine" id="headLine"><img src="img/TokyoMetro.png" width="32" height="32" style="display:inline" />&nbsp;<%= @title %></a>
+      </div>
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="#" data-toggle="modal" data-target="#trainInfo">運行情報</a></li>
+        </ul>
+      </div>
     </div>
   </header>
-    <article id="article" typeof="Article">
-      <div property="articleBody" id="articleBody" class="container">
-        <%- @articleBody %>
-      </div>
-    </article>
+  <article id="article" typeof="Article">
+    <div property="articleBody" id="articleBody" class="container">
+      <%- @articleBody %>
+    </div>
+  </article>
   <footer id="footer" class="navbar navbar-default navbar-fixed-bottom">
-    <div property="creator" id="creator" class="container">
-      <div typeof="person" id="creatorPerson">
-        <span property="name" id="creatorName">Satoshi Fujiwara </span>
-        <span property="url" id="creatorURL"><a href="http://www.enoie.net/">http://www.enoie.net/</a></span>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-3" property="creator" id="creator">
+          <div typeof="person" id="creatorPerson">
+            <span property="name" id="creatorName"><a href="http://www.enoie.net/">S.F.</a></span>
+          </div>
+        </div>
+        <div class="col-xs-3 text-center"><button class="btn btn-xs" id="trainInfoBtn" data-toggle="modal" data-target="#trainInfo">正常運転中</button></div>
+        <div class="col-xs-6 text-right"><small><time id="date" property="dc:date"></time></small></div>
       </div>
     </div>
   </footer>
+  <div class="modal fade" id="trainInfo" tabindex="-1" role="dialog" aria-labelledby="運行情報" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="trainInfoTitle">運行情報&nbsp;<small><time id="modelDate" property="dc:date"></time>現在</small></h4>
+        </div>
+        <div class="modal-body">
+          <table class="table table-condensed">
+            <thead><tr><th class="line">路線</th><th class="status">状況</th></tr></thead>
+            <tbody id="trainInfoBody"></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="stationInfo" tabindex="-1" role="dialog" aria-labelledby="駅時刻表" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="stationInfoTitle">時刻表&nbsp;</h4>
+        </div>
+        <div class="modal-body" id="stationInfoBody">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist" id="stationInfoTab">
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content" id="stationInfoTabContent">
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

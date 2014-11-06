@@ -25,8 +25,10 @@ requirejs.config({
   paths: {
     "q": "http://cdnjs.cloudflare.com/ajax/libs/q.js/1.0.1/q",
     "jquery": "http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min",
-    "bootstrap": "http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min",
-    "d3": "http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min"
+ //   "knockout" : "http://cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min",
+    "d3": "http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min",
+    "domReady" : "http://cdnjs.cloudflare.com/ajax/libs/require-domReady/2.0.1/domReady",
+    "bootstrap": "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min"
   },
   shim: {
     'bootstrap': {
@@ -38,22 +40,22 @@ requirejs.config({
 
 // 方面データ
 //路線名	方面1	方面2
-var directionInfos = {
-    'odpt.Railway:TokyoMetro.MarunouchiBranch' : {'odpt.RailDirection:TokyoMetro.Honancho' : false,'odpt.RailDirection:TokyoMetro.NakanoSakaue':true },
-    'odpt.Railway:TokyoMetro.Marunouchi' :{ 'odpt.RailDirection:TokyoMetro.Ikebukuro' : true,'odpt.RailDirection:TokyoMetro.Ogikubo': false },
-    'odpt.Railway:TokyoMetro.Ginza' : {'odpt.RailDirection:TokyoMetro.Asakusa':true,'odpt.RailDirection:TokyoMetro.Shibuya':false },
-    'odpt.Railway:TokyoMetro.Hanzomon' : {'odpt.RailDirection:TokyoMetro.Shibuya':false,'odpt.RailDirection:TokyoMetro.Oshiage':true },
-    'odpt.Railway:TokyoMetro.Tozai': {'odpt.RailDirection:TokyoMetro.Nakano':true,'odpt.RailDirection:TokyoMetro.NishiFunabashi':false},
-    'odpt.Railway:TokyoMetro.Hibiya' : { 'odpt.RailDirection:TokyoMetro.KitaSenju':true,'odpt.RailDirection:TokyoMetro.NakaMeguro':false },
-    'odpt.Railway:TokyoMetro.Namboku':{ 'odpt.RailDirection:TokyoMetro.Meguro' : true,'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi':false },
-    'odpt.Railway:TokyoMetro.Fukutoshin':{ 'odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.Shibuya': false },
-    'odpt.Railway:TokyoMetro.Yurakucho' :{ 'odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.ShinKiba':false },
-    'odpt.Railway:TokyoMetro.Chiyoda' :{'odpt.RailDirection:TokyoMetro.KitaAyase':false,	'odpt.RailDirection:TokyoMetro.Ayase':true,'odpt.RailDirection:TokyoMetro.YoyogiUehara':false,'odpt.RailDirection:TokyoMetro.Ayase':true}
+var lineInfos = {
+    'odpt.Railway:TokyoMetro.MarunouchiBranch' : {'title':'丸ノ内線分岐線',color: '#e60012','odpt.RailDirection:TokyoMetro.Honancho' : false,'odpt.RailDirection:TokyoMetro.NakanoSakaue':true },
+    'odpt.Railway:TokyoMetro.Marunouchi' :{'title':'丸ノ内線',color : '#e60012', 'odpt.RailDirection:TokyoMetro.Ikebukuro' : true,'odpt.RailDirection:TokyoMetro.Ogikubo': false },
+    'odpt.Railway:TokyoMetro.Ginza' : {'title':'銀座線',color:'#f39700','odpt.RailDirection:TokyoMetro.Asakusa':true,'odpt.RailDirection:TokyoMetro.Shibuya':false },
+    'odpt.Railway:TokyoMetro.Hanzomon' : {'title':'半蔵門線',color: '#9b7cb6','odpt.RailDirection:TokyoMetro.Shibuya':false,'odpt.RailDirection:TokyoMetro.Oshiage':true },
+    'odpt.Railway:TokyoMetro.Tozai': {'title':'東西線',color:'#00a7db','odpt.RailDirection:TokyoMetro.Nakano':true,'odpt.RailDirection:TokyoMetro.NishiFunabashi':false},
+    'odpt.Railway:TokyoMetro.Hibiya' : {'title':'日比谷線', color:'#9caeb7', 'odpt.RailDirection:TokyoMetro.KitaSenju':true,'odpt.RailDirection:TokyoMetro.NakaMeguro':false },
+    'odpt.Railway:TokyoMetro.Namboku':{ 'title':'南北線',color : '#00ada9','odpt.RailDirection:TokyoMetro.Meguro' : true,'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi':false },
+    'odpt.Railway:TokyoMetro.Fukutoshin':{'title':'副都心線',color : '#bb641d', 'odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.Shibuya': false },
+    'odpt.Railway:TokyoMetro.Yurakucho' :{ 'title':'有楽町線',color : '#d7c447','odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.ShinKiba':false },
+    'odpt.Railway:TokyoMetro.Chiyoda' :{'title':'千代田線',color : '#009944','odpt.RailDirection:TokyoMetro.KitaAyase':false,	'odpt.RailDirection:TokyoMetro.Ayase':true,'odpt.RailDirection:TokyoMetro.YoyogiUehara':false,'odpt.RailDirection:TokyoMetro.Ayase':true}
 };
 
 
 // 各線の色情報
-var lineInfos = {
+var lineInfos2 = {
     '4号線丸ノ内線分岐線' : { color: '#e60012', 'owl:sameAs': 'odpt.Railway:TokyoMetro.MarunouchiBranch',direction:'odpt.RailDirection:TokyoMetro.NakanoSakaue' },
     '4号線丸ノ内線' : {color : '#e60012', 'owl:sameAs': 'odpt.Railway:TokyoMetro.Marunouchi', direction: 'odpt.RailDirection:TokyoMetro.Ikebukuro'},
     '3号線銀座線' : {color:'#f39700', 'owl:sameAs': 'odpt.Railway:TokyoMetro.Ginza', direction: 'odpt.RailDirection:TokyoMetro.Asakusa'},
@@ -63,13 +65,173 @@ var lineInfos = {
     '7号線南北線' : { color : '#00ada9','owl:sameAs': 'odpt.Railway:TokyoMetro.Namboku', direction: 'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi'},
     '13号線副都心線' : { color : '#bb641d','owl:sameAs': 'odpt.Railway:TokyoMetro.Fukutoshin', direction: 'odpt.RailDirection:TokyoMetro.Shibuya'},
     '8号線有楽町線' : { color : '#d7c447','owl:sameAs': 'odpt.Railway:TokyoMetro.Yurakucho', direction: 'odpt.RailDirection:TokyoMetro.ShinKiba'},
-    '9号線千代田線' : { color : '#009944','owl:sameAs': 'odpt.Railway:TokyoMetro.Chiyoda', direction: 'odpt.RailDirection:TokyoMetro.Ayase'},
+    '9号線千代田線' : { color : '#009944','owl:sameAs': 'odpt.Railway:TokyoMetro.Chiyoda', direction: 'odpt.RailDirection:TokyoMetro.Ayase'}
 };
 
-require(["q", "jquery", "bootstrap", "d3"],
-function (q, jq) {
-  var trainsBackup = null;
-  (function (q, jq) {
+var trainOwners = {
+ 'odpt.TrainOwner:TokyoMetro' : '東京メトロ' ,
+ 'odpt.TrainOwner:Seibu' : '西武鉄道' ,
+ 'odpt.TrainOwner:SaitamaRailway' : '埼玉高速鉄道' ,
+ 'odpt.TrainOwner:Tobu' : '東武鉄道' ,
+ 'odpt.TrainOwner:ToyoRapidRailway' : '東葉高速鉄道' ,
+ 'odpt.TrainOwner:Toei' : '都営地下鉄' ,
+ 'odpt.TrainOwner:Tokyu' : '東急電鉄' ,
+ 'odpt.TrainOwner:JR-East' : 'JR東日本' ,
+ 'odpt.TrainOwner:Odakyu' : '小田急電鉄' 
+ };
+
+ var trainTypes = {
+   'odpt.TrainType:TokyoMetro.Unknown' : { title : '不明' , color:'gray'},
+ 'odpt.TrainType:TokyoMetro.Local' : { title:'各停',color:'black' },
+ 'odpt.TrainType:TokyoMetro.Express' : {title:'急行',color:'blue'} ,
+ 'odpt.TrainType:TokyoMetro.Rapid' : {title:'快速' ,color:'green'},
+ 'odpt.TrainType:TokyoMetro.SemiExpress': { title: '準急', color: 'green' } ,
+ 'odpt.TrainType:TokyoMetro.TamaExpress': { title: '多摩急行', color: 'blue' } ,
+ 'odpt.TrainType:TokyoMetro.HolidayExpress' :{title: '土休急行' , color:'blue'},
+ 'odpt.TrainType:TokyoMetro.CommuterSemiExpress': { title: '通勤準急', color: 'green' } ,
+ 'odpt.TrainType:TokyoMetro.Extra' : { title:'臨時' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.RomanceCar' : {title:'特急ロマンスカー' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.RapidExpress' : {title:'快速急行' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.CommuterExpress' : {title:'通勤急行' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.LimitedExpress' : {title:'特急' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.CommuterLimitedExpress' : {title:'通勤特急' ,color:'red'},
+ 'odpt.TrainType:TokyoMetro.CommuterRapid' : {title:'通勤快速' ,color:'blue'},
+ 'odpt.TrainType:TokyoMetro.ToyoRapid': { title: '東葉快速', color: 'blue' }
+ };
+
+var railDirections = {
+ 'odpt.RailDirection:TokyoMetro.Asakusa' : '浅草方面' ,
+ 'odpt.RailDirection:TokyoMetro.Ogikubo' : '荻窪方面' ,
+ 'odpt.RailDirection:TokyoMetro.Ikebukuro' : '池袋方面' ,
+ 'odpt.RailDirection:TokyoMetro.Honancho' : '方南町方面' ,
+ 'odpt.RailDirection:TokyoMetro.NakanoSakaue' : '中野坂上方面' ,
+ 'odpt.RailDirection:TokyoMetro.NakaMeguro' : '中目黒方面' ,
+ 'odpt.RailDirection:TokyoMetro.KitaSenju' : '北千住方面' ,
+ 'odpt.RailDirection:TokyoMetro.NishiFunabashi' : '西船橋方面' ,
+ 'odpt.RailDirection:TokyoMetro.Nakano' : '中野方面' ,
+ 'odpt.RailDirection:TokyoMetro.YoyogiUehara' : '代々木上原方面' ,
+ 'odpt.RailDirection:TokyoMetro.Ayase' : '綾瀬方面' ,
+ 'odpt.RailDirection:TokyoMetro.KitaAyase' : '北綾瀬方面' ,
+ 'odpt.RailDirection:TokyoMetro.ShinKiba' : '新木場方面' ,
+ 'odpt.RailDirection:TokyoMetro.Ikebukuro' : '池袋方面' ,
+ 'odpt.RailDirection:TokyoMetro.Oshiage' : '押上方面' ,
+ 'odpt.RailDirection:TokyoMetro.Shibuya' : '渋谷方面' ,
+ 'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi' : '赤羽岩淵方面' ,
+ 'odpt.RailDirection:TokyoMetro.Meguro' : '目黒方面' ,
+ 'odpt.RailDirection:TokyoMetro.ShirokaneTakanawa' : '白金高輪方面' ,
+ 'odpt.RailDirection:TokyoMetro.Wakoshi' : '和光市方面' ,
+ 'odpt.RailDirection:TokyoMetro.KotakeMukaihara' : '小竹向原方面' 
+ }
+
+ var otherStations = {
+ 'odpt.Station:JR-East.Joban.Abiko' : '我孫子' ,
+ 'odpt.Station:JR-East.Joban.Toride' : '取手' ,
+ 'odpt.Station:JR-East.Joban.Kashiwa' : '柏' ,
+ 'odpt.Station:JR-East.Joban.Matsudo' : '松戸' ,
+ 'odpt.Station:JR-East.Chuo.Mitaka' : '三鷹' ,
+ 'odpt.Station:JR-East.ChuoChikatetsuTozai.Tsudanuma' : '津田沼' ,
+ 'odpt.Station:Toei.Mita.Mita' : '三田' ,
+ 'odpt.Station:Toei.Mita.Shibakoen' : '芝公園' ,
+ 'odpt.Station:Toei.Mita.Onarimon' : '御成門' ,
+ 'odpt.Station:Toei.Mita.Uchisaiwaicho' : '内幸町' ,
+ 'odpt.Station:Toei.Mita.Hibiya' : '日比谷' ,
+ 'odpt.Station:Toei.Mita.Otemachi' : '大手町' ,
+ 'odpt.Station:Toei.Mita.Jimbocho' : '神保町' ,
+ 'odpt.Station:Toei.Mita.Suidobashi' : '水道橋' ,
+ 'odpt.Station:Toei.Mita.Kasuga' : '春日' ,
+ 'odpt.Station:Toei.Mita.Hakusan' : '白山' ,
+ 'odpt.Station:Toei.Mita.Sengoku' : '千石' ,
+ 'odpt.Station:Toei.Mita.Sugamo' : '巣鴨' ,
+ 'odpt.Station:Toei.Mita.NishiSugamo' : '西巣鴨' ,
+ 'odpt.Station:Toei.Mita.ShinItabashi' : '新板橋' ,
+ 'odpt.Station:Toei.Mita.Itabashikuyakushomae' : '板橋区役所前' ,
+ 'odpt.Station:Toei.Mita.Itabashihoncho' : '板橋本町' ,
+ 'odpt.Station:Toei.Mita.Motohasunuma' : '本蓮沼' ,
+ 'odpt.Station:Toei.Mita.ShimuraSanchome' : '志村坂上' ,
+ 'odpt.Station:Toei.Mita.Hasune' : '蓮根' ,
+ 'odpt.Station:Toei.Mita.Nishidai' : '西台' ,
+ 'odpt.Station:Toei.Mita.Takashimadaira' : '高島平' ,
+ 'odpt.Station:Toei.Mita.ShinTakashimadaira' : '新高島平' ,
+ 'odpt.Station:Toei.Mita.NishiTakashimadaira' : '西高島平' ,
+ 'odpt.Station:SaitamaRailway.SaitamaRailway.UrawaMisono' : '浦和美園' ,
+ 'odpt.Station:SaitamaRailway.SaitamaRailway.Hatogaya' : '鳩ヶ谷' ,
+ 'odpt.Station:ToyoRapidRailway.ToyoRapid.ToyoKatsutadai' : '東葉勝田台' ,
+ 'odpt.Station:ToyoRapidRailway.ToyoRapid.YachiyoMidorigaoka' : '八千代緑ヶ丘' ,
+ 'odpt.Station:Odakyu.Tama.Karakida' : '唐木田' ,
+ 'odpt.Station:Odakyu.Odawara.HonAtsugi' : '本厚木' ,
+ 'odpt.Station:Odakyu.Odawara.HakoneYumoto' : '箱根湯本' ,
+ 'odpt.Station:Odakyu.Odawara.Ebina' : '海老名' ,
+ 'odpt.Station:Tobu.Nikko.MinamiKurihashi' : '南栗橋' ,
+ 'odpt.Station:Tobu.Isesaki.Kuki' : '久喜 　' ,
+ 'odpt.Station:Tobu.Isesaki.Takenotsuka' : '竹ノ塚' ,
+ 'odpt.Station:Tobu.Isesaki.KitaKasukabe' : '北春日部' ,
+ 'odpt.Station:Tobu.Isesaki.KitaKoshigaya' : '北越谷' ,
+ 'odpt.Station:Tobu.Isesaki.TobuDoubutuKouen' : '東武動物公園' ,
+ 'odpt.Station:Tobu.Tojo.Kawagoeshi' : '川越市' ,
+ 'odpt.Station:Tobu.Tojo.Asaka' : '朝霧' ,
+ 'odpt.Station:Tobu.Tojo.Asakadai' : '朝霧台' ,
+ 'odpt.Station:Tobu.Tojo.Shiki' : '志木' ,
+ 'odpt.Station:Tobu.Tojo.Yanasegawa' : '柳瀬川' ,
+ 'odpt.Station:Tobu.Tojo.Mizuhodai' : 'みずほ台' ,
+ 'odpt.Station:Tobu.Tojo.Tsuruse' : '鶴瀬' ,
+ 'odpt.Station:Tobu.Tojo.Fujimino' : 'ふじみ野' ,
+ 'odpt.Station:Tobu.Tojo.KamiFukuoka' : '上福岡' ,
+ 'odpt.Station:Tobu.Tojo.Shingashi' : '新河岸' ,
+ 'odpt.Station:Tobu.Tojo.Kawagoe' : '川越' ,
+ 'odpt.Station:Tobu.Tojo.Kawagoeshi' : '川越市' ,
+ 'odpt.Station:Tobu.Tojo.Kasumigaseki' : '霞ヶ関' ,
+ 'odpt.Station:Tobu.Tojo.Tsurugashima' : '鶴ヶ島' ,
+ 'odpt.Station:Tobu.Tojo.Wakaba' : '若葉' ,
+ 'odpt.Station:Tobu.Tojo.Sakado' : '坂戸' ,
+ 'odpt.Station:Tobu.Tojo.KitaSakado' : '北坂戸' ,
+ 'odpt.Station:Tobu.Tojo.Takasaka' : '高坂' ,
+ 'odpt.Station:Tobu.Tojo.HigashiMatsuyama' : '東松山' ,
+ 'odpt.Station:Tobu.Tojo.ShinrinKoen' : '森林公園' ,
+ 'odpt.Station:Tokyu.Toyoko.Hiyoshi' : '日吉' ,
+ 'odpt.Station:Tokyu.Toyoko.MusashiKosugi' : '武蔵小杉' ,
+ 'odpt.Station:Tokyu.Toyoko.Yokohama' : '横浜' ,
+ 'odpt.Station:Tokyu.Toyoko.Kikuna' : '菊名' ,
+ 'odpt.Station:Tokyu.Toyoko.Motosumiyoshi' : '元住吉' ,
+ 'odpt.Station:Tokyu.Toyoko.Okusawa' : '奥沢' ,
+ 'odpt.Station:Tokyu.Meguro.Hiyoshi' : '日吉' ,
+ 'odpt.Station:Tokyu.Meguro.Okusawa' : '奥沢' ,
+ 'odpt.Station:Tokyu.Meguro.Motosumiyoshi' : '元住吉' ,
+ 'odpt.Station:Tokyu.Meguro.MusashiKosugi' : '武蔵小杉' ,
+ 'odpt.Station:Tokyu.DenEnToshi.FutakoTamagawa' : '二子玉川' ,
+ 'odpt.Station:Tokyu.DenEnToshi.Nagatsuta' : '長津田' ,
+ 'odpt.Station:Tokyu.DenEnToshi.Saginuma' : '鷺沼' ,
+ 'odpt.Station:Tokyu.DenEnToshi.ChuoRinkan' : '中央林間' ,
+ 'odpt.Station:Minatomirai.Minatomirai.MotomachiChukagai' : '元町・中華街' ,
+ 'odpt.Station:Seibu.Ikebukuro.ShinSakuradai' : '新桜台' ,
+ 'odpt.Station:Seibu.Ikebukuro.Nerima' : '練馬' ,
+ 'odpt.Station:Seibu.Ikebukuro.Nakamurabashi' : '中村橋' ,
+ 'odpt.Station:Seibu.Ikebukuro.Fujimidai' : '富士見台' ,
+ 'odpt.Station:Seibu.Ikebukuro.NerimaTakanodai' : '練馬高野台' ,
+ 'odpt.Station:Seibu.Ikebukuro.ShakujiiKoen' : '石神井公園' ,
+ 'odpt.Station:Seibu.Ikebukuro.OizumiGakuen' : '大泉学園' ,
+ 'odpt.Station:Seibu.Ikebukuro.Hoya' : '保谷' ,
+ 'odpt.Station:Seibu.Ikebukuro.Hibarigaoka' : 'ひばりヶ丘' ,
+ 'odpt.Station:Seibu.Ikebukuro.HigashiKurume' : '東久留米' ,
+ 'odpt.Station:Seibu.Ikebukuro.Kiyose' : '清瀬' ,
+ 'odpt.Station:Seibu.Ikebukuro.Akitsu' : '秋津' ,
+ 'odpt.Station:Seibu.Ikebukuro.Tokorozawa' : '所沢' ,
+ 'odpt.Station:Seibu.Ikebukuro.NishiTokorozawa' : '西所沢' ,
+ 'odpt.Station:Seibu.Ikebukuro.Kotesashi' : '小手指' ,
+ 'odpt.Station:Seibu.Ikebukuro.Sayamagaoka' : '狭山ヶ丘' ,
+ 'odpt.Station:Seibu.Ikebukuro.MusashiFujisawa' : '武蔵藤沢' ,
+ 'odpt.Station:Seibu.Ikebukuro.InariyamaKoen' : '稲荷山公園' ,
+ 'odpt.Station:Seibu.Ikebukuro.Irumashi' : '入間市' ,
+ 'odpt.Station:Seibu.Ikebukuro.Bushi' : '仏子' ,
+ 'odpt.Station:Seibu.Ikebukuro.Motokaji' : '元加治' ,
+ 'odpt.Station:Seibu.Ikebukuro.Hanno' : '飯能' 
+ }
+
+require(["q", "jquery"/*,"knockout"*/,"d3","domReady!","bootstrap"],
+function (q, jq/*,ko*/,d3,dom) {
+    var trainsBackup = null;
+
+    //(function (q,jq,ko){
+    //})(); 
     var projection = d3.geo.mercator()
     .scale(200000)
     .center([139.845, 35.65]);
@@ -81,12 +243,20 @@ function (q, jq) {
       , json(jsonBase + '/stations.json')
       , json(jsonBase + '/railroad.json')
       , json(jsonBase + '/station.json')
+      , json(jsonBase + '/stationTimeTable/stationTimeTableIndexs.json')
+      , json(jsonBase + '/holidays.json')
     ];
     q.all(jsons)
-    .spread(function (railways, stations,railroad,station) {
+    .spread(function (railways, stations,railroad,station,stationTimeTableIndex,hdays) {
+      var stationsIndex = {};
+      var holidays = {};
 
+      hdays.feed.entry.forEach(function(d){
+        holidays[d['gd$when'][0]['startTime']] = d['title'];
+      });
       // 各データ間の関連付け。
       stations.forEach(function(s){
+        stationsIndex[s['owl:sameAs']] = s;
         railways.forEach(function (railway) {
           if(s['odpt:railway'] == railway['owl:sameAs']){
             s['odpt:railway']  = railway;
@@ -117,6 +287,19 @@ function (q, jq) {
 
         });
       });
+      
+      function getStationTitle(stationId){
+        var st = stationsIndex[stationId];
+        if(st){
+          st = st['dc:title'];
+        } else {
+          st = otherStations[stationId];
+          if(!st){
+            st = stationId;
+          }
+        }
+        return st;
+      }
 
       railroad.features.forEach(
       function(d){
@@ -128,10 +311,10 @@ function (q, jq) {
         }
 
         stations.forEach(function (s) {
-            if (d.properties['開始'] == s['dc:title'] && (lineInfos[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway'])) {
+            if (d.properties['開始'] == s['dc:title'] && (lineInfos2[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway'])) {
                 d.properties['odpt:fromStation'] = s;
             }
-            if (d.properties['終了'] == s['dc:title'] && lineInfos[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway']) {
+            if (d.properties['終了'] == s['dc:title'] && lineInfos2[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway']) {
                 d.properties['odpt:toStation'] = s;
             }
             if (d.properties['開始'] == '中野坂上' && s['dc:title'] == '中野坂上') {
@@ -160,10 +343,11 @@ function (q, jq) {
       var g = svg.select('g');
       svg.append('rect')
       .attr("class", 'overlay')
-      .attr("width", rect.width)
-      .attr("height", rect.height);
+      .attr("width", 0/*rect.width*/)
+      .attr("height",0 /*rect.height*/);
       svg
       .call(zoom);
+
       var g1 = g.select('g');
       g1
       .attr('x', sx)
@@ -172,27 +356,182 @@ function (q, jq) {
         g1.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
       }
 
-      (function repeat(){
+      
+      // 駅時刻表
+      (function(){
+        var dtfmt = d3.time.format('%Y-%m-%d');
+        d3.select('#stationHome')
+          .selectAll('g')
+          .on('click', function (d) {
+            var this_ = d3.select(this);
+            var stobj = stationsIndex[this_.attr('id')];
+            // タイトル生成
+            d3.select('#stationInfoTitle')
+              .html('<img src="img/' + stobj['odpt:stationCode'] + '.png" width="32" height="32" class="metro-image"/>&nbsp;' + this_.attr('data-title') + '駅 <small>' + stobj['odpt:railway']['dc:title']+ '線</small>');
+            // 時刻表タブ作成
+            var stationTT = stationTimeTableIndex[this_.attr('id')];
+            var tabSel = d3.select('#stationInfoTab')
+              .selectAll('li')
+              .data(stationTT,function(d){return this_.attr('id') + '.' + d.direction;});
+            //var dirIdBase = d.direction.replace(/[\:\.]/ig,'-')
+            tabSel.exit().remove();
+            tabSel.enter()
+            .append('li')
+            .attr('id',function(d){ return d.direction.replace(/[\:\.]/ig,'-') + '-tab';})
+            .attr('role','presentation')
+            .classed('active',function(d,i){return i == 0;})
+            .append('a')
+            .attr('id', function (d) { return d.direction.replace(/[\:\.]/ig,'-') + '-a';})
+            .attr('role', 'tab')
+            .attr('data-toggle','tab')
+            .attr('href', function (d) { return '#' + d.direction.replace(/[\:\.]/ig,'-') + '-body';})
+            .classed('tab-small',true)
+            .text(function (d) {
+              return railDirections[d.direction];
+            });
+
+
+            var tabBodySel = d3.select('#stationInfoTabContent').selectAll('div').data(stationTT,function(d){return this_.attr('id') + '.' + d.direction;});
+            tabBodySel.exit().remove();
+
+            tabBodySel.enter()
+            .append('div')
+            .attr('role','tabpanel')
+            .classed('tab-pane',true)
+            .classed('active',function(d,i){return i == 0;})
+            .attr('id', function (d) { return d.direction.replace(/[\:\.]/ig,'-') + '-body'});
+
+
+            tabBodySel.each(function(d){
+              var this_ = d3.select(this);
+              this_.select('table').remove();
+              var tbl = this_.append('table').classed('table table-striped table-condensed timeTable',true);
+              tbl.append('thead').append('tr').selectAll('th').data(['時', railDirections[d.direction]])
+                .enter().append('th').text(function(d){return d;});
+              var timetbl = new Array(24);
+              var hourtbl = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2,3];
+              for(var i = 0,e = timetbl.length;i < e;++i ){
+                timetbl[i] = [];
+              }
+
+              json(d.path)
+              .then(function (data) {
+                var dt = new Date();
+                var minute = dt.getMinutes(); 
+                var hour = dt.getHours();
+                var day = dt.getDay();
+                var tt = null;
+                if(holidays[dtfmt(dt)] || day == 0){
+                  tt = data['odpt:holidays'];
+                } else if(day == 6){
+                  tt = data['odpt:saturdays'];
+                } else {
+                  tt = data['odpt:weekdays'];
+                }
+
+                var m = false;
+                tt.forEach(function(d){
+                  var ttss = d['odpt:departureTime'].split(':');
+                  var destTitle = getStationTitle(d['odpt:destinationStation']);
+                  var blink = false;
+                  if(hour == parseInt(ttss[0]) && (minute <= parseInt(ttss[1])) && !m){
+                    m = true;
+                    blink = true;
+                  }
+                  timetbl[parseInt(ttss[0])].push({hour: ttss[0],minute:ttss[1],dest : destTitle,trainType:trainTypes[d['odpt:trainType']],'blink':blink,data : d });
+                });
+               // timetbl = hourtbl.map(function (d) { return { index: d, data: timetbl[d] };});
+                var timetblNew = [];
+                for(var i = 0,idx = dt.getHours();i < 23;++i,++idx){
+                  if(idx > 23){
+                    idx = 0;
+                  }
+                  timetblNew.push({index:idx,data:timetbl[idx]});
+                }
+                timetbl = timetblNew;
+                
+                var tbody = tbl.append('tbody');
+                var tr = tbody.selectAll('tr')
+                  .data(timetbl).enter()
+                  .append('tr')
+                  .each(function(d){
+                    if(d.index == dt.getHours()){
+                      d3.select(this).classed('success',true);
+                    } else{
+                      d3.select(this).classed('success',false);
+                    }
+                  });
+                tr.append('td').text(function (d) { return ('00' + d.index.toString(10)).slice(-2);});
+                tr.append('td')
+                .each(function(d,i){
+                  var data = d.data;
+                  d3.select(this)
+                    .selectAll('div')
+                    .data(data)
+                    .enter()
+                      .append('div')
+                      .attr('title', function (dd) { return dd.dest; })
+                      .style('color',function(dd){
+                        return dd.trainType.color;}
+                        )
+                      .classed('blink', function (dd) { return dd.blink;})
+                      .text(function (dd) {return dd.minute + ' '; });
+                });
+                (function (){
+                  var timerID = null;
+                  jq('#stationInfo').on('hide.bs.modal',function(e) {
+                    clearTimeout(timerID);
+                  });
+                  function update(){
+                    var tr = tbody.selectAll('tr')
+                      .data()
+                      .each(function(d){
+                        if(d.index == dt.getHours()){
+                          d3.select(this).classed('success',true);
+                        } else{
+                          d3.select(this).classed('success',false);
+                        }
+                      });
+                    
+                    setTimeout(update,60000);
+                  }
+                  timerID = setTimeout(update,60000);
+                })();
+              });
+            });
+            jq('#stationInfo').modal('show');
+          });
+      })();
+
+      var line = d3.svg.line()
+      .x(function(d) {return d[0];})
+      .y(function(d) {return d[1];});
+      
+      var marker = svg.append("defs").append("marker")
+      .attr({
+        'id': "arrowhead",
+        'refX': 0,
+        'refY': 2,
+        'markerWidth': 4,
+        'markerHeight': 4,
+        'orient': "auto"
+      });
+
+       marker.append("path")
+      .attr({
+        d: "M 0,0 V 4 L4,2 Z",
+        fill: "steelblue"
+      });
+
+      function trainLocationLoop(){
         var tg = g1.select('g#train');
-        json('/data/train.json')
+        return json(jsonBase + '/train.json')
         .then(function (trains) {
           trains.forEach(function(t){
-            stations.forEach(function (s) {
-              if(t['odpt:fromStation'] == s['owl:sameAs']){
-                t['odpt:fromStation'] = s;
-              }
-              if(t['odpt:toStation'] == s['owl:sameAs']){
-                t['odpt:toStation'] = s;
-              }
-
-              if(t['odpt:startingStation'] == s['owl:sameAs']){
-                t['odpt:startingStation'] = s;
-              }
-
-              if(t['odpt:terminalStation'] == s['owl:sameAs']){
-                t['odpt:terminalStation'] = s;
-              }
-            });
+            t['odpt:fromStation'] = stationsIndex[t['odpt:fromStation']];
+            t['odpt:toStation'] = stationsIndex[t['odpt:toStation']];
+//            t['odpt:startingStation'] = getStation(t['odpt:startingStation']);
+//            t['odpt:terminalStation'] = getStation(t['odpt:terminalStation']); 
           });
         
           // 走行中の列車の位置を表示
@@ -235,7 +574,7 @@ function (q, jq) {
                 console.log(cr + ' @ ' + rev);
               }
  
-              reverse = directionInfos[d['odpt:railway']][d['odpt:railDirection']];
+              reverse = lineInfos[d['odpt:railway']][d['odpt:railDirection']];
 
               //if (cr.attr('data-reverse') == 1) {
               //  reverse = !reverse;
@@ -250,6 +589,7 @@ function (q, jq) {
                 'data' : d,
                 'from' : d['odpt:fromStation'],
                 'to' : d['odpt:toStation'],
+                'terminalStationTitle':getStationTitle(d['odpt:terminalStation']),
                 'railway':d['odpt:railway'],
                 'trainNumber' : d['odpt:trainNumber'],
                 'totalLength' : l,
@@ -263,15 +603,13 @@ function (q, jq) {
           });
 
           var trainsSel = tg.selectAll('g');
-          function drawTrains(trainsSelection)
-          {
-            var data = trainsSelection
+            var data = trainsSel
               .data(trainsVm
               //.filter(function(d){
               //  return d.data['odpt:railway'] == 'odpt.Railway:TokyoMetro.Ginza';
               //})
                 ,function (d) {
-                  return d.trainNumber;// keyは列車番号
+                  return d.data['owl:sameAs'];// keyは列車番号
                 });
 
             data
@@ -337,29 +675,142 @@ function (q, jq) {
             trainMarkers
             .append('circle')
             .attr('r' , '2')
-            .attr('fill', function(d){
-              var reverse = d.reverse;
-              if(reverse){
-                return 'blue';
-              } 
-              return 'orange';
-            });
+            .classed('train-marker', function (d) { return !d.reverse;})
+            .classed('train-marker-reverse', function (d) { return d.reverse; });
+            //.attr('fill', function(d){
+            //  var reverse = d.reverse;
+            //  if(reverse){
+            //    return 'blue';
+            //  } 
+            //  return 'orange';
+            //});
 
             trainMarkers.append('text')
-            .style('font-size', '4px')
+            .style('font-size', '3px')
             .style('text-anchor', 'left')
-            .style('fill','green')
+//            .style('fill','green')
+            .classed('train-marker', function (d) { return !d.reverse;})
+            .classed('train-marker-reverse', function (d) { return d.reverse; })
+            .attr('dx','4')
+            .attr('dy',function(d){if(d.reverse) return -4;return 6;})
             .text(function (d) {
-              return d.trainNumber;
+              return d.terminalStationTitle + '行';
             });
 
+            trainMarkers.append('path')
+            .attr({
+              'd': function (d) { return line([[0, 0], [4, d.reverse?-4:4]]) ;},
+              'stroke':'black',
+              'opacity':0.75,
+              'stroke-width' : 0.25
+            });
             data.exit().remove();
+
             trainsBackup = trainsVm;
-          }
-          drawTrains(trainsSel);
+          
+            var interval = 60000;
+            var getTimeStr = d3.time.format("%H時%M分");
+            if(trains.length > 0){
+              var dt = new Date(Date.parse(trains[0]['dc:date']));
+              var dtv = new Date(Date.parse(trains[0]['dct:valid']));
+              d3.select('#date')
+                .attr('datetime',trains[0]['dc:date'])
+                .text(getTimeStr(dt));
+
+              interval = dtv - new Date() + 5000;
+              if(interval < 0){
+                interval = 10000;
+              }
+            } else {
+              var dateNow = new Date();
+              d3.select('#date')
+                .attr('datetime',dateNow.toISOString())
+                .text(getTimeStr(dateNow));
+            }
+            return q.delay(interval);
         });
-        window.setTimeout(repeat,30000);
-      })();
+      };
+
+      function doTrainLocationLoop(){
+        trainLocationLoop().done(doTrainLocationLoop);
+      }
+      doTrainLocationLoop();
+
+      // 鉄道運行情報の表示
+      var trainInfo = null;
+      jq('#trainInfo').on('show.bs.modal',function(e){
+        var trainInfoSel = d3.select('#trainInfoBody').selectAll('tr').data(trainInfo);
+        var ts = trainInfoSel.enter().append('tr');
+
+        ts.append('td')
+          .text(function (d) {return lineInfos[d['odpt:railway']].title;})
+          .style('color', 'white')
+          .classed('line',true)
+          .style('background-color', function (d) { return lineInfos[d['odpt:railway']].color;});
+            
+        ts.append('td')
+          .append('small')
+          .classed('text-success',function(d){
+            return !d['odpt:trainInformationStatus'];
+          })
+          .classed('text-danger',function(d){
+            return d['odpt:trainInformationStatus'];
+          })
+          .text(function (d) {
+            return d['odpt:trainInformationText'];
+          });
+
+        trainInfoSel.exit().remove();
+      });
+
+      function trainInfoLoop(){
+        return json(jsonBase + '/trainInfo.json')
+        .then(function (ti) {
+          trainInfo = ti;
+          var dt = new Date(Date.parse(trainInfo[0]['dc:date']));
+          var dtv =  new Date(Date.parse(trainInfo[0]['dct:valid']));
+          var time = d3.time.format("%H時%M分")(dt);
+          d3.select('#modelDate')
+            .attr('datetime',trainInfo[0]['dc:date'])
+            .text(time);
+
+
+          var trouble = null;
+
+          trainInfo.forEach(function (d) {
+            if( d['odpt:trainInformationStatus']){
+              trouble = d['odpt:trainInformationStatus'];
+              d3.select('#' + d['odpt:railway'].replace(/[\:\.]/ig,'-')).classed('blink-line',true);
+            } else{
+              d3.select('#' + d['odpt:railway'].replace(/[\:\.]/ig,'-')).classed('blink-line',false);
+            }
+          });
+
+          var trainInfoBtn = d3.select('#trainInfoBtn');
+
+          if(trouble){
+            trainInfoBtn.text(trouble)
+              .classed('btn-danger',true)
+              .classed('btn-success',false);
+          } else {
+            trainInfoBtn.text('正常運転')
+              .classed('btn-danger',false)
+              .classed('btn-success',true);
+          }
+
+          var interval = dtv - new Date() + 5000;
+          if(interval < 0){
+            interval = 10000;
+          }
+          return q.delay(interval);
+        });
+      };
+
+      function doTrainInfoLoop(){
+        trainInfoLoop().done(doTrainInfoLoop);
+      }
+      doTrainInfoLoop();
+
 
       // テスト用
       //function moveTest(){
@@ -391,16 +842,13 @@ function (q, jq) {
     })
     .catch(function(err){
       alert('エラーが発生しました。' + err);
+      console.log(err);
     });
-  })(q,jq);
 }
  ,
 // Error //
 function (err) {
-  var elm = document.createElement('div');
-  document.body.appendChild(elm);
-  elm.classList.add('alert');
-  elm.classList.add('alert-danger');
-  elm.innerText = "エラー:" + err.description();
+  alert('エラーが発生しました。' + err);
+  console.log(err);
 }
 );

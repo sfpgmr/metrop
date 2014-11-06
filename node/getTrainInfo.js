@@ -25,56 +25,88 @@
 var fs = require('fs');
 var https = require('https');
 var q = require('q');
-var jsdom = require('jsdom').jsdom;
-var d3 = require('d3');
-var ect = require('ect');
 var zlib = require('zlib');
+var util = require('util');
 
 var outputDataDir = '../html/data';
-//var outputDataDir = '/var/www/html/data';
 
 var cacheDir = './data';
 var apiUrl = 'https://api.tokyometroapp.jp/api/v2/';
 var reg_type = new RegExp('.*\\/v2\\/([^\\/\\?\\&]*)\\?rdf\\:type\\=odpt\\:([^\\&]*)');
 var reg_urn = new RegExp('.*\\/v2\\/([^\\/\\?\\&]*)\\/urn\\:ucode\\:([^\\&]*)');
-
-//var reg = new RegExp('.*\\/v2\\/([^\\/\\?]*)(.*)$');
-var stationGeoJsons = [];
-var template = null;
-var railways = null;
-var stations = null;
-
 var writeFile = q.nfbind(fs.writeFile);
 
 q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
 .then(function (key) {
     var apiKey = JSON.parse(key).apiKey;
-    var urls = [   
-        { 'apiUrl' : apiUrl + 'datapoints?rdf:type=odpt:TrainInformation', 'path' : outputDataDir + '/trainInfo.json', 'apiKey' : apiKey },
-        { 'apiUrl' : apiUrl + 'datapoints?rdf:type=odpt:Train', 'path' : outputDataDir + '/train.json', 'apiKey' : apiKey }
-    ];
-    var timerID = null;
-    function doLoop() {
+    (function doLoop() {
+      var path = outputDataDir + '/train.json';
+      var json = null;
       // 運行情報の保存
-      var now = new Date();
-      var promises = [];
-      urls.forEach(function (d) {
-        promises.push(callAPIAndSaveFileGzipped(d.apiUrl, d.path, d.apiKey));
-      });
-      q.all(promises)
-        .then(function () {
-          console.log('データ取得:' + new Date());
-          timerID = setTimeout(doLoop, 60000);
+        callMetroAPI({ url: apiUrl + 'datapoints?rdf:type=odpt:Train' }, apiKey)
+        .then(function (j) {
+          json = JSON.parse(j);
+          return writeFile(path, j, 'utf-8');
         })
-        .catch(function (err) {
-          console.log('エラーが発生しました。' + err.toString());
+        .then(compressGzip.bind(null, path))
+        .done(function () {
+          var now = new Date();
+          var interval = 60000;
+          if (json[0]) {
+            var dtv = new Date(json[0]['dct:valid']);
+            var dt = new Date(json[0]['dc:date']);
+            console.log(dtv - now);
+            interval = dtv - now + 5000;
+            if (interval < 0) {
+              interval = 30000;
+            }
+            //              timerID = setTimeout(doLoop, interval);
+            console.log(path + ':' + now.toLocaleString() + ':dct:valid:' + dtv.toLocaleString() + ':dc:date:' + dt.toLocaleString() + ':interval:' + interval);
+          } else {
+            console.log(path + ':error:' + console.log(json));
+          }
+          setTimeout(doLoop, interval);
         });
-    }    ;
-    doLoop();
-})
+      json = void (0);// リソース解放
+    })();
+    
+    (function doLoop2() {
+      var path = outputDataDir + '/trainInfo.json';
+      var json = null;
+      // 運行情報の保存
+         callMetroAPI({ url: apiUrl + 'datapoints?rdf:type=odpt:TrainInformation' }, apiKey)
+        .then(function (j) {
+          json = JSON.parse(j);
+          return writeFile(path, j, 'utf-8');
+        })
+        .then(compressGzip.bind(null, path))
+        .done(function () {
+          var now = new Date();
+          var interval = 0;
+          if (json[0]) {
+            var dtv = new Date(json[0]['dct:valid']);
+            var dt = new Date(json[0]['dc:date']);
+            console.log(dtv - now);
+            interval = dtv - now + 1000;
+            if (interval < 0) {
+              interval = 30000;
+            }
+          }
+          console.log(path + ':' + now.toLocaleString() + ':dct:valid:' + dtv.toLocaleString() + ':dc:date:' + dt.toLocaleString() + ':interval:' + interval);
+          setTimeout(doLoop2, interval);
+        });
+      json = void(0);
+    })();
+  })
 .then(function () {
     console.log('### 初期化処理完了 ###');
-})
+    (function gc_() {
+      var mem = process.memoryUsage();
+      global.gc();
+      console.log(new Date().toISOString() + ':ガベコレ:' + util.inspect(mem) + ':' + util.inspect(process.memoryUsage()));
+      setTimeout(gc_, 60000);
+    })();
+  })
 .catch(function (err) {
     // エラー処理
     console.log('エラーが発生しました。' + err.toString());
@@ -99,7 +131,8 @@ function callMetroAPI(url, apiKey) {
         
         res.on('end', function (res) {
             //            ret = JSON.parse(body);
-            d.resolve(body);
+          d.resolve(body);
+          body = void (0);
         });
     }).on('error', function (e) {
         console.log(e);
@@ -151,6 +184,7 @@ function compressGzip(path) {
     fs.createReadStream(path)
                     .pipe(zlib.createGzip({ level: zlib.Z_BEST_COMPRESSION }))
                     .pipe(out);
+    out = void(0);                  
     return dout.promise;
 }
 

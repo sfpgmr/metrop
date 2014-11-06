@@ -25,7 +25,6 @@
 
 var fs = require('fs');
 var https = require('https');
-var http = require('http');
 var q = require('q');
 var jsdom = require('jsdom').jsdom;
 var d3 = require('d3');
@@ -114,102 +113,200 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
         .then(function (json) {
             var gj = JSON.parse(json);
             st['ug:region'] = gj;
-            stationGeoJsons[st['dc:title']] = { stationData: st, geometry: JSON.parse(json) };
-
-//            stationGeoJsons.push({ title: st['dc:title'], stationData: st, geometry: JSON.parse(json) });
+            stationGeoJsons[st['dc:title']] = { stationData: st, geometry: gj };
         });
     });
     
     // 
     return result;
 })
-.then(function () {
-    var promises = [];
-    //// 運行情報の保存
-    //[   { 'apiUrl' : apiUrl + 'datapoints?rdf:type=odpt:TrainInformation', 'path' : outputDataDir + '/trainInfo.json', 'apiKey' : apiKey },
-    //    { 'apiUrl' : apiUrl + 'datapoints?rdf:type=odpt:Train', 'path' : outputDataDir + '/train.json', 'apiKey' : apiKey }
-    //]
-    //.forEach(function (d) {
-    //    promises.push(callAPIAndSaveFileGzipped(d.apiUrl, d.path, d.apiKey));
-    //});
-    
-    // その他情報の保存
-    [
-        { url : apiUrl + 'datapoints?rdf:type=odpt:StationFacility', cacheregex : reg_type, path : outputDataDir + '/stationFacility.json'},
-        { url : apiUrl + 'datapoints?rdf:type=odpt:PassengerSurvey', cacheregex : reg_type, path : outputDataDir + '/passengerSurvey.json'},
-        { url : apiUrl + 'datapoints?rdf:type=odpt:RailwayFare', cacheregex : reg_type,path : outputDataDir + '/railwayFare.json'}//,
-    ].forEach(function (d) {
-        promises.push(
-            callMetroAPICached(d, apiKey)
-            .then(function (json){
-                return writeFile(d.path,json,'utf-8');
-            })
-            .then(compressGzip.bind(null,d.path))
-        );
+// 東京との境界図,鉄道路線情報をロードする
+.then(function (){
+    return q.all([
+        q.nfcall(fs.readFile , 'data/tokyo-to.json', 'utf-8'),
+        q.nfcall(fs.readFile , 'data/railroad.geojson', 'utf-8'),
+        q.nfcall(fs.readFile , 'data/station.geojson', 'utf-8')
+    ]);
+})
+.spread(function (tokyoTo,railroad,station) {
+    tokyoTo = JSON.parse(tokyoTo);
+    railroad = JSON.parse(railroad);
+    station = JSON.parse(station);
+        
+    railroad.features.forEach(function (d) {
+        if (d.properties['開始'] == '麹町') {
+            d.properties['開始'] = '麴町';
+        }
+        if (d.properties['終了'] == '麹町') {
+            d.properties['終了'] = '麴町';
+        }
+
+        stations.forEach(function (s) {
+            if (d.properties['開始'] == s['dc:title'] && (lineInfos[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway'])) {
+                d.properties['odpt:fromStation'] = s['owl:sameAs'];;
+            }
+            if (d.properties['終了'] == s['dc:title'] && lineInfos[d.properties['N02_003']]['owl:sameAs'] == s['odpt:railway']) {
+                d.properties['odpt:toStation'] = s['owl:sameAs'];
+            }
+        });
+        if (d.properties['開始'] == '中野坂上') {
+            d.properties['odpt:fromStation'] = 'odpt.Station:TokyoMetro.Marunouchi.NakanoSakaue';
+        }
+        if (d.properties['終了'] == '中野坂上') {
+            d.properties['odpt:toStation'] = 'odpt.Station:TokyoMetro.Marunouchi.NakanoSakaue';
+        }
     });
     
-    // 駅時刻表は駅ごとに分割して保存する
-    promises.push(
-      callMetroAPICached({ url : apiUrl + 'datapoints?rdf:type=odpt:StationTimetable', cacheregex : reg_type }, apiKey)
-        .then(function (json) {
-          var r = q(0);
-          var stationTimeTableIndexs = {};
-          var tbls = JSON.parse(json);
-          tbls.forEach(function (d) {
-            var fname = d["owl:sameAs"].split(':')[1] + '.json';
-            var fp = outputDataDir + '/stationTimeTable/' + fname;
-            if (!stationTimeTableIndexs[d['odpt:station']]) {
-              stationTimeTableIndexs[d['odpt:station']] = [];
-            }
-            stationTimeTableIndexs[d['odpt:station']].push({ direction: d['odpt:railDirection'], path : '/data/stationTimeTable/' + fname });
-            r = r.then(writeFile.bind(null, fp, JSON.stringify(d), 'utf-8')).then(compressGzip.bind(null, fp));
-          });
-          r = r.then(writeFile.bind(null,outputDataDir + '/stationTimeTable/stationTimeTableIndexs.json', JSON.stringify(stationTimeTableIndexs),'utf-8'));
-          return r;
+    station.features.forEach(function (s) {
+      if (s.properties['N02_005'] == '麹町') {
+        s.properties['N02_005'] = '麴町';
+      }
+      if (s.properties['N02_005'] == '中野坂上') {
+        var ss = null;
+        for (var i = 0, e = stations.length; i < e; ++i) {
+          if (stations[i]['owl:sameAs'] == 'odpt.Station:TokyoMetro.Marunouchi.NakanoSakaue') {
+            ss = stations[i];
+            break;
+          }
+        }
+        s.properties['station'] = ss;
+        
+      } else {
+        for (var i = 0, e = stations.length; i < e; ++i) {
+          var ss = stations[i];
+          if (s.properties['N02_005'] == ss['dc:title'] && lineInfos[s.properties['N02_003']]['owl:sameAs'] == ss['odpt:railway']) {
+            s.properties['station'] = ss;
+            break;
+          }
+        }
+      }
+    });
+
+    console.log('路線図');
+    railways.forEach(function (railway) {
+        // 路線図
+        var rail = railway['rail'] = { "type": "FeatureCollection", "features": [] };
+        rail.features = 
+        railroad.features.filter(function (d) {
+            return lineInfos[d.properties['N02_003']]['owl:sameAs'] == railway['owl:sameAs'];
+        }).sort(function (a, b) {
+            return a.properties['順序'] - b.properties['順序'];
         })
-    );
+    });
+    //    document = jsdom.jsdom(htmlFile);
+    //    window = document.parentWindow;
+    var width = 1920,
+        height = 1080;
+    var svg = d3.select('body').append('svg')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('id', 'metroMap').append('g').append('g');
+    var projection = 
+        d3.geo.mercator()
+        .scale(200000)
+        .center([139.845,35.65]);
+    
+    var path = d3.geo.path().projection(projection);
+    
+    // 東京都地図の表示
+    svg.append('g')
+    .attr('id', 'tokyoMap')
+    .selectAll('path')
+    .data(tokyoTo.features)
+    .enter()
+    .append('path')
+    .attr('d', path)
+    .attr('fill', function (d) {
+        return 'none';
+    })
+    .attr('stroke', 'black');
 
-    //// 列車時刻表は列車ごとに分割して保存する
-    //promises.push(
-    //  callMetroAPICached({ url : apiUrl + 'datapoints?rdf:type=odpt:TrainTimetable', cacheregex : reg_type }, apiKey)
-    //    .then(function (json) {
-    //      var r = q(0);
-    //      var tbls = JSON.parse(json);
-    //      tbls.forEach(function (d) {
-    //        var fname = d["owl:sameAs"].split(':')[1] + '.json';
-    //        var fp = outputDataDir + '/trainTimeTable/' + fname;
-    //        r = r.then(writeFile.bind(null, fp, JSON.stringify(d), 'utf-8')).then(compressGzip.bind(null, fp));
-    //      });
-    //      return r;
-    //    })
-    //);
+    // 路線図の表示
+    var railroadMap = svg.append('g')
+    .attr('id', 'RailroadMap');
 
+    railways.forEach(function (r) {
+        var id = r['owl:sameAs'].replace(/[\:\.]/ig, '-');
+        railroadMap.append('g')
+        .attr('id', id)
+        .attr('data-title', r['dc:title'])
+        .attr('data-direction',railwayInfos[r['owl:sameAs']].direction)
+        .selectAll('path')
+        .data(r.rail.features)
+        .enter()
+        .append('path')
+        .attr('id', function(d) { return id + '-' + d.properties['順序']; })
+        .attr('data-class', 'railroad')
+        .attr('data-no', function (d) { return d.properties['順序']; })
+        .attr('data-from', function (d) { return d.properties['odpt:fromStation']; })
+        .attr('data-to', function (d) { return d.properties['odpt:toStation']; })
+        .attr('data-flg', function (d) { return d.properties['フラグ']; })
+        .attr('data-reverse', function (d) { return d.properties['reverse']; })
+        .attr('data-railway', r['owl:sameAs'])
+        .attr('d', function (d) { return path(d.geometry);})
+        .attr('fill', 'none')
+        .attr('stroke', function (d) { return lineInfos[d.properties['N02_003']]['color']; })
+        .attr('stroke-width', '5')
+        .attr('stroke-linecap', 'round');
+    });
 
-    var stationDataPath = outputDataDir + '/stations.json';
-    promises.push(
-      writeFile(stationDataPath, JSON.stringify(stations), 'utf-8')
-      .then(compressGzip.bind(null, stationDataPath))
-    );
+    // 駅位置の表示
+    svg.append('g')
+    .attr('id', 'stationHome')
+    .selectAll('path')
+    .data(station.features)
+    .enter()
+    .append('g')
+    .attr('data-title', function (d) { return d.properties['N02_005']; })
+    .attr('data-railway', function (d) { return d.properties['station']['odpt:railway']; })
+    .attr('id', function (d) {
+        console.log(d.properties);
+        return d.properties['station']['owl:sameAs'];
+      })
+    .append('path')
+    .attr('d', function (d) {
+        return path(d.geometry);
+      })
+    .classed('station-marker', true);
+    //.attr('fill', 'none')
+    //.attr('stroke', 'white')
+    //.attr('stroke-width', '4')
+    //.attr('stroke-linecap', 'round');
+
+    svg.append('g')
+    .attr('id', 'train');
+
+    var gst = svg.append('g');
+    for (var s in stationGeoJsons) {
+        var gj = stationGeoJsons[s];
+        //console.log(gj.stationData['dc:title']);
+        var ppos = projection(gj.geometry.coordinates);
+        var px = ppos[0];
+        var py = ppos[1];
+        //gst.append('circle')
+        //.attr('cx', px)
+        //.attr('cy', py)
+        //.attr('r' , '2')
+        //.attr('fill', 'white');
         
-    var railwaysDataPath = outputDataDir + '/railways.json';
-    promises.push(
-      writeFile(railwaysDataPath, JSON.stringify(railways), 'utf-8')
-      .then(compressGzip.bind(null, railwaysDataPath))
-    );
-        
-
-
-    return q.all(promises);
-  })
-.then(function () {
-    // 3年分の休日データを取得
-
-  return httpGet('http://www.google.com/calendar/feeds/ja.japanese%23holiday%40group.v.calendar.google.com/public/full?alt=json&max-results=100')
-  .then(function (json) {
-     return writeFile(outputDataDir + '/holidays.json', json, 'utf-8')
-  })
-  .then(compressGzip.bind(null, outputDataDir + '/holidays.json'));
+        gst.append('text')
+        .attr('x', px)
+        .attr('y', py)
+        .style('font-size', '4px')
+        .style('text-anchor', 'left')
+        .text(s);
+    }
+    
+    var svgData = d3.select('body').node().innerHTML;
+    var renderer = ect({ root : './' });
+    var data = {
+        title : 'Metro Info.',
+        articleBody: svgData
+    };
+    
+    return writeFile(outputDir + '/index.html', renderer.render('template_0001.html', data), 'utf-8');
 })
+.then(compressGzip.bind(null, outputDir + '/index.html'))
 .then(function () {
     console.log('### 処理終了 ###');
 })
@@ -244,29 +341,6 @@ function callMetroAPI(url, apiKey) {
         d.reject(e);
     });
     return d.promise;
-}
-
-// http get 
-function httpGet(url) {
-  
-  var d = q.defer();
-  
-  http.get(url, function (res) {
-    var body = '';
-    res.setEncoding('utf8');
-    
-    res.on('data', function (chunk) {
-      body += chunk;
-    });
-    
-    res.on('end', function (res) {
-      d.resolve(body);
-    });
-  }).on('error', function (e) {
-      console.log(e);
-      d.reject(e);
-    });
-  return d.promise;
 }
 
 // ローカルキャッシュ付きのAPI呼び出し
