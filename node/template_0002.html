@@ -1,0 +1,80 @@
+﻿<% extend 'template_base.html' %>
+<% block 'article' : %>
+<div property="articleBody" id="articleBody" class="container">
+  <%- @articleBody %>
+</div>
+<% end %>
+<% block 'header-script' : %>
+<link rel="stylesheet" href="css/main.min.css" />
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js" data-main="Scripts/main.js"></script>
+<% end %>
+<% block 'nav-content' : %>
+<ul class="nav navbar-nav">
+  <li><a href="#" data-toggle="modal" data-target="#trainInfo">運行情報</a></li>
+  <li class="dropdown">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">時刻表<span class="caret"></span></a>
+    <ul class="dropdown-menu multi-level" role="menu" id="time-table-dropdown"></ul>
+  </li>
+</ul>
+<p class="navbar-text navbar-right"><a href="./manual.html" class="navbar-link" ><span class="glyphicon glyphicon-question-sign"></span>マニュアル</a></p>
+<% end %>
+
+<% block 'footer-content' : %>
+<button class="btn btn-xs" id="trainInfoBtn" data-toggle="modal" data-target="#trainInfo">正常運転中</button>
+<% end %>
+
+<% block 'etc-content' : %>
+<div class="modal fade" id="trainInfo" tabindex="-1" role="dialog" aria-labelledby="運行情報" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="trainInfoTitle">運行情報&nbsp;<small><time id="modelDate" property="dc:date"></time>現在</small></h4>
+      </div>
+      <div class="modal-body">
+        <table class="table table-condensed">
+          <thead><tr><th class="line">路線</th><th class="status">状況</th></tr></thead>
+          <tbody id="trainInfoBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="stationInfo" tabindex="-1" role="dialog" aria-labelledby="駅時刻表" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="stationInfoTitle">時刻表&nbsp;</h4>
+      </div>
+      <div class="modal-body" id="stationInfoBody">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist" id="stationInfoTab"></ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content" id="stationInfoTabContent">
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+<!-- マニュアル -->
+<div class="modal fade" id="manual" tabindex="-1" role="dialog" aria-labelledby="マニュアル" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="stationInfoTitle">操作マニュアル</h4>
+      </header>
+      <article class="modal-body">
+        <section></section>
+      </article>
+      <footer class="modal-footer"></footer>
+    </div>
+  </div>
+</div>
+<% end %>

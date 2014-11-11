@@ -1,12 +1,13 @@
 ﻿@import url('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css');
+@import url(bootstrap-submenu.min.css);
 html {
   position: relative;
   height: 100%;
 }
 body {
   /* Margin bottom by footer height */
-  margin-top: 60px;
-  margin-bottom: 60px;
+  margin-top: 50px;
+  margin-bottom: 50px;
   height: 100%;
 }
 .footer {
@@ -113,9 +114,6 @@ body {
   text-align: center;
   display: inline-block;
   min-width: 20px;
-  min-height: 30px;
-}
-.modal {
-  height: 100% !important;
+  min-height: 10px;
 }
 /*# sourceMappingURL=main.css.map */

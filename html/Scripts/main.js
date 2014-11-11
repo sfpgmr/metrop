@@ -28,11 +28,15 @@ requirejs.config({
  //   "knockout" : "http://cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min",
     "d3": "http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min",
     "domReady" : "http://cdnjs.cloudflare.com/ajax/libs/require-domReady/2.0.1/domReady",
-    "bootstrap": "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min"
+    "bootstrap": "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min",
+    "bootstrap-submenu" : "bootstrap-submenu.min"
   },
   shim: {
     'bootstrap': {
       deps: ['jquery']
+    },
+    'bootstrap-submenu':{
+      deps: ['bootstrap']
     }
   }
 
@@ -42,14 +46,14 @@ requirejs.config({
 //路線名	方面1	方面2
 var lineInfos = {
     'odpt.Railway:TokyoMetro.MarunouchiBranch' : {'title':'丸ノ内線分岐線',color: '#e60012','odpt.RailDirection:TokyoMetro.Honancho' : false,'odpt.RailDirection:TokyoMetro.NakanoSakaue':true },
-    'odpt.Railway:TokyoMetro.Marunouchi' :{'title':'丸ノ内線',color : '#e60012', 'odpt.RailDirection:TokyoMetro.Ikebukuro' : true,'odpt.RailDirection:TokyoMetro.Ogikubo': false },
+    'odpt.Railway:TokyoMetro.Marunouchi' :{'title':'丸ノ内線',color : '#e60012', 'odpt.RailDirection:TokyoMetro.Ikebukuro' : true,'odpt.RailDirection:TokyoMetro.Ogikubo': false,'odpt.RailDirection:TokyoMetro.NakanoSakaue':true },
     'odpt.Railway:TokyoMetro.Ginza' : {'title':'銀座線',color:'#f39700','odpt.RailDirection:TokyoMetro.Asakusa':true,'odpt.RailDirection:TokyoMetro.Shibuya':false },
     'odpt.Railway:TokyoMetro.Hanzomon' : {'title':'半蔵門線',color: '#9b7cb6','odpt.RailDirection:TokyoMetro.Shibuya':false,'odpt.RailDirection:TokyoMetro.Oshiage':true },
     'odpt.Railway:TokyoMetro.Tozai': {'title':'東西線',color:'#00a7db','odpt.RailDirection:TokyoMetro.Nakano':true,'odpt.RailDirection:TokyoMetro.NishiFunabashi':false},
     'odpt.Railway:TokyoMetro.Hibiya' : {'title':'日比谷線', color:'#9caeb7', 'odpt.RailDirection:TokyoMetro.KitaSenju':true,'odpt.RailDirection:TokyoMetro.NakaMeguro':false },
-    'odpt.Railway:TokyoMetro.Namboku':{ 'title':'南北線',color : '#00ada9','odpt.RailDirection:TokyoMetro.Meguro' : true,'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi':false },
-    'odpt.Railway:TokyoMetro.Fukutoshin':{'title':'副都心線',color : '#bb641d', 'odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.Shibuya': false },
-    'odpt.Railway:TokyoMetro.Yurakucho' :{ 'title':'有楽町線',color : '#d7c447','odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.ShinKiba':false },
+    'odpt.Railway:TokyoMetro.Namboku':{ 'title':'南北線',color : '#00ada9','odpt.RailDirection:TokyoMetro.Meguro' : true,'odpt.RailDirection:TokyoMetro.AkabaneIwabuchi':false,'odpt.RailDirection:TokyoMetro.ShirokaneTakanawa':false },
+    'odpt.Railway:TokyoMetro.Fukutoshin':{'title':'副都心線',color : '#bb641d', 'odpt.RailDirection:TokyoMetro.Wakoshi':true,'odpt.RailDirection:TokyoMetro.KotakeMukaihara':true,	'odpt.RailDirection:TokyoMetro.Shibuya': false },
+    'odpt.Railway:TokyoMetro.Yurakucho' :{ 'title':'有楽町線',color : '#d7c447','odpt.RailDirection:TokyoMetro.Wakoshi':true,	'odpt.RailDirection:TokyoMetro.KotakeMukaihara':true,'odpt.RailDirection:TokyoMetro.ShinKiba':false },
     'odpt.Railway:TokyoMetro.Chiyoda' :{'title':'千代田線',color : '#009944','odpt.RailDirection:TokyoMetro.KitaAyase':false,	'odpt.RailDirection:TokyoMetro.Ayase':true,'odpt.RailDirection:TokyoMetro.YoyogiUehara':false,'odpt.RailDirection:TokyoMetro.Ayase':true}
 };
 
@@ -226,8 +230,9 @@ var railDirections = {
  'odpt.Station:Seibu.Ikebukuro.Hanno' : '飯能' 
  }
 
-require(["q", "jquery"/*,"knockout"*/,"d3","domReady!","bootstrap"],
+require(["q", "jquery"/*,"knockout"*/,"d3","domReady!","bootstrap","bootstrap-submenu"],
 function (q, jq/*,ko*/,d3,dom) {
+
     var trainsBackup = null;
 
     //(function (q,jq,ko){
@@ -356,173 +361,269 @@ function (q, jq/*,ko*/,d3,dom) {
         g1.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
       }
 
-      
-      // 駅時刻表
-      (function(){
-        var dtfmt = d3.time.format('%Y-%m-%d');
-        d3.select('#stationHome')
-          .selectAll('g')
-          .on('click', function (d) {
-            var this_ = d3.select(this);
-            var stobj = stationsIndex[this_.attr('id')];
-            // タイトル生成
-            d3.select('#stationInfoTitle')
-              .html('<img src="img/' + stobj['odpt:stationCode'] + '.png" width="32" height="32" class="metro-image"/>&nbsp;' + this_.attr('data-title') + '駅 <small>' + stobj['odpt:railway']['dc:title']+ '線</small>');
-            // 時刻表タブ作成
-            var stationTT = stationTimeTableIndex[this_.attr('id')];
-            var tabSel = d3.select('#stationInfoTab')
-              .selectAll('li')
-              .data(stationTT,function(d){return this_.attr('id') + '.' + d.direction;});
-            //var dirIdBase = d.direction.replace(/[\:\.]/ig,'-')
-            tabSel.exit().remove();
-            tabSel.enter()
-            .append('li')
-            .attr('id',function(d){ return d.direction.replace(/[\:\.]/ig,'-') + '-tab';})
-            .attr('role','presentation')
-            .classed('active',function(d,i){return i == 0;})
-            .append('a')
-            .attr('id', function (d) { return d.direction.replace(/[\:\.]/ig,'-') + '-a';})
-            .attr('role', 'tab')
-            .attr('data-toggle','tab')
-            .attr('href', function (d) { return '#' + d.direction.replace(/[\:\.]/ig,'-') + '-body';})
-            .classed('tab-small',true)
-            .text(function (d) {
-              return railDirections[d.direction];
-            });
+      // -------- //
+      // 駅時刻表 //
+      // -------- //
+
+      function replaceIdStr(str){
+        return str.replace(/[\:\.]/ig,'-');
+      }
+
+      // 時刻表モーダルの表示  
+      function makeTimeTableModal (e){
+        var this_ = d3.select(this);
+        var stationId = this.dataset.stationId;
+        var stobj = stationsIndex[stationId];
+        // タイトル生成
+        d3.select('#stationInfoTitle')
+          .html('<img src="img/' + stobj['odpt:stationCode'] + '.png" width="32" height="32" class="metro-image"/>&nbsp;' + this.dataset.title + '駅 <small>' + stobj['odpt:railway']['dc:title']+ '線</small>');
+        // 時刻表タブ作成
+        var stationTT = stationTimeTableIndex[stationId];
+        var tabSel = d3.select('#stationInfoTab')
+          .selectAll('li')
+          .data(stationTT,function(d){return stationId + '-' + d.direction;});
+        tabSel.exit().remove();
+
+        tabSel.enter()
+        .append('li')
+        .attr('id',function(d){ return replaceIdStr(d.direction) + '-tab';})
+        .attr('role','presentation')
+        .classed('active',function(d,i){return i == 0;})
+        .append('a')
+        .attr('id', function (d) { return replaceIdStr(d.direction) + '-a';})
+        .attr('role', 'tab')
+        .attr('data-toggle','tab')
+        .attr('href', function (d) { return '#' + replaceIdStr(d.direction) + '-body';})
+        .classed('tab-small time-table-tab-head',true)
+        .text(function (d) {
+          return railDirections[d.direction];
+        });
 
 
-            var tabBodySel = d3.select('#stationInfoTabContent').selectAll('div').data(stationTT,function(d){return this_.attr('id') + '.' + d.direction;});
-            tabBodySel.exit().remove();
+        var tabBodySel = d3.select('#stationInfoTabContent').selectAll('div').data(stationTT,function(d){return stationId + '.' + d.direction;});
+        tabBodySel.exit().remove();
 
-            tabBodySel.enter()
-            .append('div')
-            .attr('role','tabpanel')
-            .classed('tab-pane',true)
-            .classed('active',function(d,i){return i == 0;})
-            .attr('id', function (d) { return d.direction.replace(/[\:\.]/ig,'-') + '-body'});
+        tabBodySel.enter()
+        .append('div')
+        .attr('role','tabpanel')
+        .classed('tab-pane time-table-tab-pane',true)
+        .classed('active',function(d,i){return i == 0;})
+        .attr('id', function (d) { return replaceIdStr(d.direction) + '-body'});
 
 
-            tabBodySel.each(function(d){
-              var this_ = d3.select(this);
-              this_.select('table').remove();
-              var tbl = this_.append('table').classed('table table-striped table-condensed timeTable',true);
-              tbl.append('thead').append('tr').selectAll('th').data(['時', railDirections[d.direction]])
-                .enter().append('th').text(function(d){return d;});
-              var timetbl = new Array(24);
-              var hourtbl = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2,3];
+        tabBodySel.each(function(d){
+          var this_ = d3.select(this);
+          this_.select('table').remove();
+          var tbl = this_.append('table').classed('table table-striped table-condensed timeTable',true);
+          tbl.append('thead').append('tr').selectAll('th').data(['時', railDirections[d.direction]])
+            .enter().append('th').text(function(d){return d;});
+          var timetbl = new Array(24);
+
+          json(d.path)
+          .then(function (data) {
+            var dt = new Date();
+            var minute = dt.getMinutes(); 
+            var hour = dt.getHours();
+            var day = dt.getDay();
+            var date = dt.getDate();
+            var tt = null;
+
+            function makeTtData(){
               for(var i = 0,e = timetbl.length;i < e;++i ){
                 timetbl[i] = [];
               }
+              if(holidays[dtfmt(dt)] || day == 0){
+                tt = data['odpt:holidays'];
+              } else if(day == 6){
+                tt = data['odpt:saturdays'];
+              } else {
+                tt = data['odpt:weekdays'];
+              }
 
-              json(d.path)
-              .then(function (data) {
-                var dt = new Date();
-                var minute = dt.getMinutes(); 
-                var hour = dt.getHours();
-                var day = dt.getDay();
-                var tt = null;
-                if(holidays[dtfmt(dt)] || day == 0){
-                  tt = data['odpt:holidays'];
-                } else if(day == 6){
-                  tt = data['odpt:saturdays'];
-                } else {
-                  tt = data['odpt:weekdays'];
-                }
-
-                var m = false;
-                tt.forEach(function(d){
-                  var ttss = d['odpt:departureTime'].split(':');
-                  var destTitle = getStationTitle(d['odpt:destinationStation']);
-                  var blink = false;
-                  if(hour == parseInt(ttss[0]) && (minute <= parseInt(ttss[1])) && !m){
-                    m = true;
-                    blink = true;
-                  }
-                  timetbl[parseInt(ttss[0])].push({hour: ttss[0],minute:ttss[1],dest : destTitle,trainType:trainTypes[d['odpt:trainType']],'blink':blink,data : d });
-                });
-               // timetbl = hourtbl.map(function (d) { return { index: d, data: timetbl[d] };});
-                var timetblNew = [];
-                for(var i = 0,idx = dt.getHours();i < 23;++i,++idx){
-                  if(idx > 23){
-                    idx = 0;
-                  }
-                  timetblNew.push({index:idx,data:timetbl[idx]});
-                }
-                timetbl = timetblNew;
-                
-                var tbody = tbl.append('tbody');
-                var tr = tbody.selectAll('tr')
-                  .data(timetbl).enter()
-                  .append('tr')
-                  .each(function(d){
-                    if(d.index == dt.getHours()){
-                      d3.select(this).classed('success',true);
-                    } else{
-                      d3.select(this).classed('success',false);
-                    }
-                  });
-                tr.append('td').text(function (d) { return ('00' + d.index.toString(10)).slice(-2);});
-                tr.append('td')
-                .each(function(d,i){
-                  var data = d.data;
-                  d3.select(this)
-                    .selectAll('div')
-                    .data(data)
-                    .enter()
-                      .append('div')
-                      .attr('title', function (dd) { return dd.dest; })
-                      .style('color',function(dd){
-                        return dd.trainType.color;}
-                        )
-                      .classed('blink', function (dd) { return dd.blink;})
-                      .text(function (dd) {return dd.minute + ' '; });
-                });
-                (function (){
-                  var timerID = null;
-                  jq('#stationInfo').on('hide.bs.modal',function(e) {
-                    clearTimeout(timerID);
-                  });
-                  function update(){
-                    var tr = tbody.selectAll('tr')
-                      .data()
-                      .each(function(d){
-                        if(d.index == dt.getHours()){
-                          d3.select(this).classed('success',true);
-                        } else{
-                          d3.select(this).classed('success',false);
-                        }
-                      });
-                    
-                    setTimeout(update,60000);
-                  }
-                  timerID = setTimeout(update,60000);
-                })();
+              tt.forEach(function(d){
+                var ttss = d['odpt:departureTime'].split(':');
+                var destTitle = getStationTitle(d['odpt:destinationStation']);
+                timetbl[parseInt(ttss[0])].push({hour: ttss[0],minute:ttss[1],dest : destTitle,trainType:trainTypes[d['odpt:trainType']],data : d });
               });
-            });
-            jq('#stationInfo').modal('show');
-          });
-      })();
 
+            }
+            makeTtData();
+
+            var tbody = tbl.append('tbody');
+
+            function makeTableBody(){
+              var dt = new Date();
+              var minute = dt.getMinutes(); 
+              var hour = dt.getHours();
+              var timetblNew = [];
+              if(date != dt.getDate()){
+                date = dt.getDate();
+                makeTtData();
+              }
+              for(var i = 0,idx = dt.getHours();i < 24;++i,++idx){
+                if(idx > 23){
+                  idx = 0;
+                }
+                timetblNew.push({index:idx,data:timetbl[idx]});
+              }
+              var tr = tbody.selectAll('tr')
+                .data(timetblNew);
+              var trEnt = tr.enter()
+                .append('tr')
+                .each(function(d){
+                  if(d.index == dt.getHours()){
+                    d3.select(this).classed('success',true);
+                  } else{
+                    d3.select(this).classed('success',false);
+                  }
+                });
+              trEnt.append('td')
+                .classed('time-hour-title',true);
+              trEnt.append('td').classed('time-min-col',true);
+
+              var f = false;
+
+              //tr.selectAll('.time-hour-title')
+              //.text(function (d) { return ('00' + d.index.toString(10)).slice(-2);});
+ 
+              tr.each(function(d,i){
+                // 時間列
+                d3.select(this).select('.time-hour-title').text(('00' + d.index.toString(10)).slice(-2));
+
+                var data = d.data;
+                var divcol = d3.select(this).select('.time-min-col')
+                .selectAll('div')
+                .data(data);
+                // 分列の表示
+                divcol.enter()
+                .append('div')
+                .append('a')
+                .attr({href:'#','data-toggle' : 'tooltip', 'data-placement' : 'auto'})
+                .attr('title', function (dd) { return dd.trainType.title + ' ' + dd.dest; })
+                .style('color',function(dd){
+                  return dd.trainType.color;}
+                  )
+                .text(function (dd) {return dd.minute + ' '; });
+
+                divcol
+                .select('a')
+                .classed('blink', function (dd) {
+                      
+                  if((parseInt(dd.hour) == hour && parseInt(dd.minute) >= minute || ((hour > parseInt(dd.hour)) || (hour == 23 && parseInt(dd.hour) == 0))) && !f){
+                    f = true;
+                    return true;
+                  } 
+                  return false;
+                });
+                divcol.exit().remove();
+              });
+              tr.exit().remove();
+            }
+            makeTableBody();
+            $('.time-min-col div a').tooltip();
+            (function (){
+              var timerID = null;
+              jq('#stationInfo').on('hide.bs.modal',function(e) {
+                clearTimeout(timerID);
+              });
+              (function repeat(){
+                makeTableBody();
+                timerID = setTimeout(repeat,60000);
+              })();
+            })();
+          });
+        });
+        jq('#stationInfo').modal('show');
+      }
+
+      // マップへのバインド
+      var dtfmt = d3.time.format('%Y-%m-%d');
+      d3.select('#stationHome')
+        .selectAll('g')
+        .on('click', makeTimeTableModal);
+
+      // メニューへのバインド
+      var ttMenu = d3
+      .select('#time-table-dropdown')
+      .selectAll('li')
+      .data(railways)
+      .enter()
+      .append('li')
+      .classed('dropdown-submenu',true);
+
+      ttMenu.append('a')
+      .attr('href','#')
+      .classed('dropdown-toggle',true)
+      .attr('data-toggle','dropdown')
+      .text(function (d) {
+        return lineInfos[d['owl:sameAs']].title;
+      });
+
+      ttMenu.append('ul')
+      .classed('dropdown-menu',true)
+      .attr('role','menu')
+      .each(function (d) {
+        var sto = d['odpt:stationOrder'];
+        d3.select(this).selectAll('li')
+        .data(sto)
+        .enter()
+        .append('li')
+        .append('a')
+        .attr({'href':'#'})
+        .text(function (dd) {
+          return stationsIndex[dd['odpt:station']]['dc:title'];
+        })
+        .attr('data-station-id', function (dd) { return dd['odpt:station']; })
+        .attr('data-title', function (dd) { return stationsIndex[dd['odpt:station']]['dc:title'];})
+        .on('click',makeTimeTableModal);
+      });
+
+      $('.dropdown-submenu > a').submenupicker();
+
+      // ------------------------ //
+      // マップへの列車位置の表示 //
+      // ------------------------ //
+
+      // ライン関数の定義 
       var line = d3.svg.line()
       .x(function(d) {return d[0];})
       .y(function(d) {return d[1];});
       
-      var marker = svg.append("defs").append("marker")
+      // マーカー定義 (青）
+      var markerBlue = svg.append("defs").append("marker")
       .attr({
-        'id': "arrowhead",
+        'id': "train-marker-blue",
         'refX': 0,
         'refY': 2,
         'markerWidth': 4,
         'markerHeight': 4,
         'orient': "auto"
-      });
-
-       marker.append("path")
+      })
+      .append("path")
       .attr({
         d: "M 0,0 V 4 L4,2 Z",
-        fill: "steelblue"
+        fill: "blue",
+        opacity: '0.75'
       });
 
+      // マーカー定義（赤）
+      var markerRed = svg.append("defs").append("marker")
+      .attr({
+        'id': "train-marker-red",
+        'refX': 0,
+        'refY': 2,
+        'markerWidth': 4,
+        'markerHeight': 4,
+        'orient': "auto"
+      })
+      .append("path")
+      .attr({
+        d: "M 0,0 V 4 L4,2 Z",
+        fill: "red",
+        opacity: '0.75'
+      });
+
+      // 列車位置表示関数
       function trainLocationLoop(){
         var tg = g1.select('g#train');
         return json(jsonBase + '/train.json')
@@ -592,6 +693,7 @@ function (q, jq/*,ko*/,d3,dom) {
                 'terminalStationTitle':getStationTitle(d['odpt:terminalStation']),
                 'railway':d['odpt:railway'],
                 'trainNumber' : d['odpt:trainNumber'],
+                'trainType' : trainTypes[d['odpt:trainType']],
                 'totalLength' : l,
                 'center': pt,
                 'transition' : transition,
@@ -603,131 +705,210 @@ function (q, jq/*,ko*/,d3,dom) {
           });
 
           var trainsSel = tg.selectAll('g');
-            var data = trainsSel
-              .data(trainsVm
-              //.filter(function(d){
-              //  return d.data['odpt:railway'] == 'odpt.Railway:TokyoMetro.Ginza';
-              //})
-                ,function (d) {
-                  return d.data['owl:sameAs'];// keyは列車番号
-                });
+          var data = trainsSel
+            .data(trainsVm
+            //.filter(function(d){
+            //  return d.data['odpt:railway'] == 'odpt.Railway:TokyoMetro.Ginza';
+            //})
+              ,function (d) {
+                return d.data['owl:sameAs'];// keyは列車番号
+              });
+          // 子ノードのデータも更新
+          tg.selectAll('path.train')
+          .data(trainsVm
+            //.filter(function(d){
+            //  return d.data['odpt:railway'] == 'odpt.Railway:TokyoMetro.Ginza';
+            //})
+              ,function (d) {
+                return d.data['owl:sameAs'];// keyは列車番号
+              });
 
-            data
-            .filter(function (d) {
-              return (!(!d.transition)); 
-            })
-            .transition()
-            .delay(function (d, i) { return i * 30; })
-            .duration(1500)
-            .ease('linear')
-            .attrTween('transform',function(data,index){
-              return (function(){
-                var d = data;
-                var i = index;
-                return function(t){
-                  var pt;
-                  var tls = d.transition;
-                  var tl = tls.totalLength/2;
-                  var reverse = tls.reverse ;//tls.interval?tls.reverse:d.reverse;
-                  if (parseInt(tls.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
+
+          var trainTrans = data
+          .filter(function (d) {
+            return (!(!d.transition)); 
+          })
+          .transition()
+          .delay(function (d, i) { return i * 60; })
+          .duration(1500)
+          .ease('linear')
+          .attrTween('transform',function(data,index){
+            return (function(){
+              var d = data;
+              var i = index;
+              return function(t){
+                var pt;
+                var tls = d.transition;
+                var tl = tls.totalLength/2;
+                var reverse = tls.reverse ;//tls.interval?tls.reverse:d.reverse;
+                if (parseInt(tls.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
  
-                  if(reverse){
-                    pt = tls.path.node().getPointAtLength(tl - tl * t);
-                  } else {
-                    pt = tls.path.node().getPointAtLength(tl * t + tl);
-                  }
-                  return 'translate(' + [pt.x,pt.y]+ ')';
-                };
-              })();
-            })
-            .transition()
-            .duration(1500)
-            .ease('linear')
-            .attrTween('transform',function(data,index){
-              return (function () {
-                var d = data;
-                var i = index;
-                return function(t){
-                  var pt;
-                  var tl = d.totalLength/2;
-                  var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
-                  if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
-                  if(reverse){
-                    pt = d.path.node().getPointAtLength(d.totalLength - tl * t);
-                  } else {
-                    pt = d.path.node().getPointAtLength(tl * t);
-                  }
-                  return 'translate(' + [pt.x,pt.y]+ ')';
-                };
-              })();
-            });
+                if(reverse){
+                  pt = tls.path.node().getPointAtLength(tl - tl * t);
+                } else {
+                  pt = tls.path.node().getPointAtLength(tl * t + tl);
+                }
+                return 'translate(' + [pt.x,pt.y]+ ')';
+              };
+            })();
+          });
 
-            var trainMarkers = data.enter()
-            .append('g')
-            .attr('id', function (d) { return d.trainNumber; })
-            .attr('transform',function(d){
-              var pt;
-              var tl = d.totalLength/2;
-              pt = d.path.node().getPointAtLength(tl);
-             return 'translate(' + [pt.x,pt.y]+ ')';
-            });
-
-            trainMarkers
-            .append('circle')
-            .attr('r' , '2')
-            .classed('train-marker', function (d) { return !d.reverse;})
-            .classed('train-marker-reverse', function (d) { return d.reverse; });
-            //.attr('fill', function(d){
-            //  var reverse = d.reverse;
-            //  if(reverse){
-            //    return 'blue';
-            //  } 
-            //  return 'orange';
-            //});
-
-            trainMarkers.append('text')
-            .style('font-size', '3px')
-            .style('text-anchor', 'left')
-//            .style('fill','green')
-            .classed('train-marker', function (d) { return !d.reverse;})
-            .classed('train-marker-reverse', function (d) { return d.reverse; })
-            .attr('dx','4')
-            .attr('dy',function(d){if(d.reverse) return -4;return 6;})
-            .text(function (d) {
-              return d.terminalStationTitle + '行';
-            });
-
-            trainMarkers.append('path')
-            .attr({
-              'd': function (d) { return line([[0, 0], [4, d.reverse?-4:4]]) ;},
-              'stroke':'black',
-              'opacity':0.75,
-              'stroke-width' : 0.25
-            });
-            data.exit().remove();
-
-            trainsBackup = trainsVm;
-          
-            var interval = 60000;
-            var getTimeStr = d3.time.format("%H時%M分");
-            if(trains.length > 0){
-              var dt = new Date(Date.parse(trains[0]['dc:date']));
-              var dtv = new Date(Date.parse(trains[0]['dct:valid']));
-              d3.select('#date')
-                .attr('datetime',trains[0]['dc:date'])
-                .text(getTimeStr(dt));
-
-              interval = dtv - new Date() + 5000;
-              if(interval < 0){
-                interval = 10000;
+          var ttst = trainTrans
+          .selectAll('path.train')
+          .filter(function (d) {
+            return (!(!d.transition)); 
+          });
+          ttst.attrTween('d',function(d){
+            return function(t){
+              var pts,pte;
+              var tls = d.transition;
+              var tl = tls.totalLength/2;
+              var reverse = tls.reverse ;//tls.interval?tls.reverse:d.reverse;
+              if (parseInt(tls.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
+ 
+              if(reverse){
+                pts = tls.path.node().getPointAtLength(tl - tl * t);
+                pte = tls.path.node().getPointAtLength(tl - tl * (t + 0.0001));
+              } else {
+                pts = tls.path.node().getPointAtLength(tl * t + tl);
+                pte = tls.path.node().getPointAtLength(tl * (t + 0.0001) + tl);
               }
+              return line([[0,0],[pte.x - pts.x,pte.y - pts.y]]);
+            };
+          });
+
+          trainTrans
+          .transition()
+          .duration(1500)
+          .ease('linear')
+          .attrTween('transform',function(data,index){
+            return (function () {
+              var d = data;
+              var i = index;
+              return function(t){
+                var pt;
+                var tl = d.totalLength/2;
+                var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
+                if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
+                if(reverse){
+                  pt = d.path.node().getPointAtLength(d.totalLength - tl * t);
+                } else {
+                  pt = d.path.node().getPointAtLength(tl * t);
+                }
+                return 'translate(' + [pt.x,pt.y]+ ')';
+              };
+            })();
+          })
+          .selectAll('path.train')
+          .attrTween('d',function(d){
+              return function(t){
+                var pts,pte;
+                var tl = d.totalLength/2;
+                var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
+                if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
+                if(reverse){
+                  pts = d.path.node().getPointAtLength(d.totalLength - tl * t);
+                  pte = d.path.node().getPointAtLength(d.totalLength - tl * (t + 0.0001));
+                } else {
+                  pts = d.path.node().getPointAtLength(tl * t);
+                  pte = d.path.node().getPointAtLength(tl * (t + 0.0001));
+                }
+                return line([[0,0],[pte.x - pts.x,pte.y - pts.y]]);
+              };
+          });
+
+
+          var trainMarkers = data.enter()
+          .append('g')
+          .attr('id', function (d) { return d.trainNumber; })
+          .attr('transform',function(d){
+            var pt;
+            var tl = d.totalLength/2;
+            pt = d.path.node().getPointAtLength(tl);
+
+            return 'translate(' + [pt.x,pt.y]+ ')';
+          });
+
+          trainMarkers
+          .append('path')
+          .attr('d', function (d) {
+            var pt;
+            var tl = d.totalLength/2;
+            pts = d.path.node().getPointAtLength(tl);
+            var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
+            if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
+            if(reverse){
+              pte = d.path.node().getPointAtLength(tl - tl * 0.0001);
             } else {
-              var dateNow = new Date();
-              d3.select('#date')
-                .attr('datetime',dateNow.toISOString())
-                .text(getTimeStr(dateNow));
+              pte = d.path.node().getPointAtLength(tl * 0.0001 + tl);
             }
-            return q.delay(interval);
+
+            return line([[0,0],[pte.x - pts.x,pte.y - pts.y]]);
+
+          })
+          .attr('stroke','red')
+          .attr('marker-end',function(d){
+            if(d.reverse){
+              return 'url(#train-marker-blue)';
+            } else {
+              return 'url(#train-marker-red)';
+            }
+          })
+//          .classed('train-marker', function (d) { return !d.reverse;})
+//          .classed('train-marker-reverse', function (d) { return d.reverse; })
+          .classed('train',true);
+          //.attr('fill', function(d){
+          //  var reverse = d.reverse;
+          //  if(reverse){
+          //    return 'blue';
+          //  } 
+          //  return 'orange';
+          //});
+
+          trainMarkers.append('text')
+          .style('font-size', '3px')
+          .style('text-anchor', 'left')
+//            .style('fill','green')
+          .classed('train-marker', function (d) { return !d.reverse;})
+          .classed('train-marker-reverse', function (d) { return d.reverse; })
+          .attr('dx','2')
+          .attr('dy',function(d){if(d.reverse) return -3;return 4;})
+          .text(function (d) {
+            return d.trainType.title + ' ' + d.terminalStationTitle + '行';
+          });
+
+          //trainMarkers.append('path')
+          //.attr({
+          //  'd': function (d) { return line([[0, 0], [4, d.reverse?-4:4]]) ;},
+          //  'stroke':'black',
+          //  'opacity':0.75,
+          //  'stroke-width' : 0.25
+          //});
+          data.exit().remove();
+
+          trainsBackup = trainsVm;
+          
+          
+          var interval = 60000;
+          var getTimeStr = d3.time.format("%H時%M分");
+          if(trains.length > 0){
+            var dt = new Date(Date.parse(trains[0]['dc:date']));
+            var dtv = new Date(Date.parse(trains[0]['dct:valid']));
+            d3.select('#date')
+              .attr('datetime',trains[0]['dc:date'])
+              .text(getTimeStr(dt));
+
+            interval = dtv - new Date() + 5000;
+            if(interval < 0){
+              interval = 10000;
+            }
+          } else {
+            var dateNow = new Date();
+            d3.select('#date')
+              .attr('datetime',dateNow.toISOString())
+              .text(getTimeStr(dateNow));
+          }
+          return q.delay(interval);
         });
       };
 
@@ -839,6 +1020,9 @@ function (q, jq/*,ko*/,d3,dom) {
 
       //}
       //moveTest();
+
+      // マニュアル
+      //$('#carousel-manual').carousel({interval:false});
     })
     .catch(function(err){
       alert('エラーが発生しました。' + err);

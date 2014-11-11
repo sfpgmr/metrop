@@ -259,8 +259,7 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     .append('g')
     .attr('data-title', function (d) { return d.properties['N02_005']; })
     .attr('data-railway', function (d) { return d.properties['station']['odpt:railway']; })
-    .attr('id', function (d) {
-        console.log(d.properties);
+    .attr('data-station-id', function (d) {
         return d.properties['station']['owl:sameAs'];
       })
     .append('path')
@@ -301,12 +300,26 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var renderer = ect({ root : './' });
     var data = {
         title : 'Metro Info.',
+        description: '東京メトロオープンデータ',
+        keywords : '東京メトロオープンデータ q.js d3.js',
+        author:'sfpgmr',
         articleBody: svgData
     };
     
-    return writeFile(outputDir + '/index.html', renderer.render('template_0001.html', data), 'utf-8');
+    var dataManual = {
+      title : 'Metro Info. マニュアル',
+      description: '東京メトロオープンデータ',
+      keywords : '東京メトロオープンデータ q.js d3.js',
+      author: 'sfpgmr'
+    };
+    
+    return q.all([
+      writeFile(outputDir + '/index.html', renderer.render('template_0002.html', data), 'utf-8')
+      .then(compressGzip.bind(null, outputDir + '/index.html')),
+      writeFile(outputDir + '/manual.html', renderer.render('template_0003.html', dataManual), 'utf-8')
+      .then(compressGzip.bind(null, outputDir + '/manual.html'))
+    ]);
 })
-.then(compressGzip.bind(null, outputDir + '/index.html'))
 .then(function () {
     console.log('### 処理終了 ###');
 })
