@@ -25,8 +25,10 @@
 
 var fs = require('fs');
 var https = require('https');
+var serializer = require('xmldom').XMLSerializer;
 var q = require('q');
 var jsdom = require('jsdom').jsdom;
+var domtohtml = require('jsdom/lib/jsdom/browser/domtohtml').domToHtml;
 var d3 = require('d3');
 var ect = require('ect');
 var zlib = require('zlib');
@@ -49,7 +51,6 @@ var railways = null;
 var stations = null;
 
 var writeFile = q.nfbind(fs.writeFile);
-
 
 // 各線の色情報
 var lineInfos = {
@@ -82,6 +83,7 @@ var railwayInfos = {
 //setInterval( function () {
 q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
 .then(function (key) {
+    d3.ns.prefix.sf = 'http://www.enoie.net/';
     // マスタ的な情報をまずまとめて取得する。
     apiKey = JSON.parse(key).apiKey;
     var promises = [];
@@ -198,9 +200,11 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var width = 1920,
         height = 1080;
     var svg = d3.select('body').append('svg')
+        .attr('xmlns:sf', 'http://www.enoie.net/')
         .attr('width', '100%')
         .attr('height', '100%')
-        .attr('id', 'metroMap').append('g').append('g');
+        .attr('id', 'metroMap')
+        .append('g').append('g');
     var projection = 
         d3.geo.mercator()
         .scale(200000)
@@ -218,31 +222,31 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     .attr('d', path)
     .attr('fill', function (d) {
         return 'none';
-    })
+      })
     .attr('stroke', 'black');
 
     // 路線図の表示
     var railroadMap = svg.append('g')
     .attr('id', 'RailroadMap');
-
+    console.log(d3.ns.qualify('sf:class'));
     railways.forEach(function (r) {
         var id = r['owl:sameAs'].replace(/[\:\.]/ig, '-');
-        railroadMap.append('g')
+        var t = railroadMap.append('g')
         .attr('id', id)
-        .attr('data-title', r['dc:title'])
-        .attr('data-direction',railwayInfos[r['owl:sameAs']].direction)
+        .attr('sf:title', r['dc:title'])
+        .attr('sf:direction', railwayInfos[r['owl:sameAs']].direction)
         .selectAll('path')
         .data(r.rail.features)
         .enter()
         .append('path')
-        .attr('id', function(d) { return id + '-' + d.properties['順序']; })
-        .attr('data-class', 'railroad')
-        .attr('data-no', function (d) { return d.properties['順序']; })
-        .attr('data-from', function (d) { return d.properties['odpt:fromStation']; })
-        .attr('data-to', function (d) { return d.properties['odpt:toStation']; })
-        .attr('data-flg', function (d) { return d.properties['フラグ']; })
-        .attr('data-reverse', function (d) { return d.properties['reverse']; })
-        .attr('data-railway', r['owl:sameAs'])
+        .attr('id', function (d) { return id + '-' + d.properties['順序']; })
+        .attr('sf:class', 'railroad')
+        .attr('sf:no', function (d) { return d.properties['順序']; })
+        .attr('sf:from', function (d) { return d.properties['odpt:fromStation']; })
+        .attr('sf:to', function (d) { return d.properties['odpt:toStation']; })
+        .attr('sf:flg', function (d) { return d.properties['フラグ']; })
+        .attr('sf:reverse', function (d) { return d.properties['reverse'] == true; })
+        .attr('sf:railway', r['owl:sameAs'])
         .attr('d', function (d) { return path(d.geometry);})
         .attr('fill', 'none')
         .attr('stroke', function (d) { return lineInfos[d.properties['N02_003']]['color']; })
@@ -257,9 +261,9 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     .data(station.features)
     .enter()
     .append('g')
-    .attr('data-title', function (d) { return d.properties['N02_005']; })
-    .attr('data-railway', function (d) { return d.properties['station']['odpt:railway']; })
-    .attr('data-station-id', function (d) {
+    .attr('sf:title', function (d) { return d.properties['N02_005']; })
+    .attr('sf:railway', function (d) { return d.properties['station']['odpt:railway']; })
+    .attr('sf:stationId', function (d) {
         return d.properties['station']['owl:sameAs'];
       })
     .append('path')
@@ -296,7 +300,71 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
         .text(s);
     }
     
-    var svgData = d3.select('body').node().innerHTML;
+    //
+   
+     function serializeXML(node, output) {
+      var nodeType = node.nodeType;
+      if (nodeType == 3)
+      {
+ // TEXT nodes.
+        // Replace special XML characters with their entities.
+        output.push(node.textContent.replace(/&/, '&amp;').replace(/</, '&lt;').replace('>', '&gt;'));
+      } else if (nodeType == 1)
+      {
+ // ELEMENT nodes.
+        // Serialize Element nodes.
+        var prefix = '';
+        if (node.namespaceURI == 'http://www.enoie.net/') {
+          prefix = 'sf:';
+        }
+        output.push('<' ,  prefix , node.tagName.toLowerCase());
+        if (node.hasAttributes()) {
+          var attrMap = node.attributes;
+          for (var i = 0, len = attrMap.length; i < len; ++i) {
+            var attrNode = attrMap.item(i);
+            var attrPrefix = '';
+            if (attrNode.namespaceURI == 'http://www.enoie.net/') {
+              attrPrefix = 'sf:';
+            }
+            var name = '';
+            if (attrNode.name == 'sf') {
+              name = 'xmlns:sf';
+            } else {
+              name = attrNode.name;
+            }
+            output.push(' ' , attrPrefix , name , '=\"' , attrNode.value , '\"');
+          }
+        }
+        if (node.hasChildNodes()) {
+          output.push('>');
+          var childNodes = node.childNodes;
+          for (var i = 0, len = childNodes.length; i < len; ++i) {
+            serializeXML(childNodes.item(i), output);
+          }
+          output.push('</' , prefix , node.tagName.toLowerCase() , '>');
+        } else {
+          output.push('/>');
+        }
+      } else if (nodeType == 8) {
+        // TODO(codedread): Replace special characters with XML entities?
+        output.push('<!--' , node.nodeValue , '-->');
+      } else {
+        // TODO: Handle CDATA nodes.
+        // TODO: Handle ENTITY nodes.
+        // TODO: Handle DOCUMENT nodes.
+        throw 'Error serializing XML. Unhandled node of type: ' + nodeType;
+      }
+     return output;
+    }
+
+    //var svgData = d3.select('body').node().innerHTML;
+    //var s = new serializer();
+    
+    //var svgData = s.serializeToString(d3.select('body').node());//domtohtml(d3.select('body').node());
+    var t = [];
+    serializeXML(d3.select('body > svg').node(), t);
+    var svgData = t.join('');
+    console.log(svgData);
     var renderer = ect({ root : './' });
     var data = {
         title : 'Metro Info.',
