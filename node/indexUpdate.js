@@ -83,7 +83,7 @@ var railwayInfos = {
 //setInterval( function () {
 q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
 .then(function (key) {
-    d3.ns.prefix.sf = 'http://www.enoie.net/';
+    //d3.ns.prefix.sf = 'http://www.enoie.net/';
     // マスタ的な情報をまずまとめて取得する。
     apiKey = JSON.parse(key).apiKey;
     var promises = [];
@@ -200,7 +200,7 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     var width = 1920,
         height = 1080;
     var svg = d3.select('body').append('svg')
-        .attr('xmlns:sf', 'http://www.enoie.net/')
+  //      .attr('xmlns:sf', 'http://www.enoie.net/')
         .attr('width', '100%')
         .attr('height', '100%')
         .attr('id', 'metroMap')
@@ -228,30 +228,31 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     // 路線図の表示
     var railroadMap = svg.append('g')
     .attr('id', 'RailroadMap');
-    console.log(d3.ns.qualify('sf:class'));
+    console.log(d3.ns.qualify('data-class'));
     railways.forEach(function (r) {
         var id = r['owl:sameAs'].replace(/[\:\.]/ig, '-');
         var t = railroadMap.append('g')
         .attr('id', id)
-        .attr('sf:title', r['dc:title'])
-        .attr('sf:direction', railwayInfos[r['owl:sameAs']].direction)
+        .attr('data-title', r['dc:title'])
+        .attr('data-direction', railwayInfos[r['owl:sameAs']].direction)
         .selectAll('path')
         .data(r.rail.features)
         .enter()
         .append('path')
         .attr('id', function (d) { return id + '-' + d.properties['順序']; })
-        .attr('sf:class', 'railroad')
-        .attr('sf:no', function (d) { return d.properties['順序']; })
-        .attr('sf:from', function (d) { return d.properties['odpt:fromStation']; })
-        .attr('sf:to', function (d) { return d.properties['odpt:toStation']; })
-        .attr('sf:flg', function (d) { return d.properties['フラグ']; })
-        .attr('sf:reverse', function (d) { return d.properties['reverse'] == true; })
-        .attr('sf:railway', r['owl:sameAs'])
+        .attr('data-class', 'railroad')
+        .attr('data-no', function (d) { return d.properties['順序']; })
+        .attr('data-from', function (d) { return d.properties['odpt:fromStation']; })
+        .attr('data-to', function (d) { return d.properties['odpt:toStation']; })
+        .attr('data-flg', function (d) { return d.properties['フラグ']; })
+        .attr('data-reverse', function (d) { return d.properties['reverse'] == '1'?1:0; })
+        .attr('data-railway', r['owl:sameAs'])
         .attr('d', function (d) { return path(d.geometry);})
         .attr('fill', 'none')
         .attr('stroke', function (d) { return lineInfos[d.properties['N02_003']]['color']; })
         .attr('stroke-width', '5')
         .attr('stroke-linecap', 'round');
+
     });
 
     // 駅位置の表示
@@ -261,9 +262,9 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
     .data(station.features)
     .enter()
     .append('g')
-    .attr('sf:title', function (d) { return d.properties['N02_005']; })
-    .attr('sf:railway', function (d) { return d.properties['station']['odpt:railway']; })
-    .attr('sf:stationId', function (d) {
+    .attr('data-title', function (d) { return d.properties['N02_005']; })
+    .attr('data-railway', function (d) { return d.properties['station']['odpt:railway']; })
+    .attr('data-stationId', function (d) {
         return d.properties['station']['owl:sameAs'];
       })
     .append('path')
@@ -357,14 +358,13 @@ q.nfcall(fs.readFile, 'apikey.json', 'utf-8')
      return output;
     }
 
-    //var svgData = d3.select('body').node().innerHTML;
-    //var s = new serializer();
+    var svgData = d3.select('body').node().innerHTML;
     
     //var svgData = s.serializeToString(d3.select('body').node());//domtohtml(d3.select('body').node());
-    var t = [];
-    serializeXML(d3.select('body > svg').node(), t);
-    var svgData = t.join('');
-    console.log(svgData);
+    //var t = [];
+    //serializeXML(d3.select('body > svg').node(), t);
+    //var svgData = t.join('');
+    //console.log(svgData);
     var renderer = ect({ root : './' });
     var data = {
         title : 'Metro Info.',

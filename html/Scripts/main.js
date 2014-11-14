@@ -372,11 +372,11 @@ function (q, jq/*,ko*/,d3,dom) {
       // 時刻表モーダルの表示  
       function makeTimeTableModal (e){
         var this_ = d3.select(this);
-        var stationId = this_.attr('stationId');
+        var stationId = this_.attr('data-stationid');
         var stobj = stationsIndex[stationId];
         // タイトル生成
         d3.select('#stationInfoTitle')
-          .html('<img src="img/' + stobj['odpt:stationCode'] + '.png" width="32" height="32" class="metro-image"/>&nbsp;' + this_.attr('title') + '駅 <small>' + stobj['odpt:railway']['dc:title']+ '線</small>');
+          .html('<img src="img/' + stobj['odpt:stationCode'] + '.png" width="32" height="32" class="metro-image"/>&nbsp;' + this_.attr('data-title') + '駅 <small>' + stobj['odpt:railway']['dc:title']+ '線</small>');
         // 時刻表タブ作成
         var stationTT = stationTimeTableIndex[stationId];
         var tabSel = d3.select('#stationInfoTab')
@@ -509,7 +509,7 @@ function (q, jq/*,ko*/,d3,dom) {
                 .select('a')
                 .classed('blink', function (dd) {
                       
-                  if((parseInt(dd.hour) == hour && parseInt(dd.minute) >= minute || ((hour > parseInt(dd.hour)) || (hour == 23 && parseInt(dd.hour) == 0))) && !f){
+                  if((parseInt(dd.hour) == hour && parseInt(dd.minute) >= minute || ((hour < parseInt(dd.hour)) || (hour == 23 && parseInt(dd.hour) == 0))) && !f){
                     f = true;
                     return true;
                   } 
@@ -573,7 +573,7 @@ function (q, jq/*,ko*/,d3,dom) {
         .text(function (dd) {
           return stationsIndex[dd['odpt:station']]['dc:title'];
         })
-        .attr('data-station-id', function (dd) { return dd['odpt:station']; })
+        .attr('data-stationid', function (dd) { return dd['odpt:station']; })
         .attr('data-title', function (dd) { return stationsIndex[dd['odpt:station']]['dc:title'];})
         .on('click',makeTimeTableModal);
       });
@@ -636,7 +636,7 @@ function (q, jq/*,ko*/,d3,dom) {
           });
         
           // 走行中の列車の位置を表示
-          var railRoadMap = d3.selectAll('*[sf\\:class="railroad"]')[0];
+          var railRoadMap = d3.selectAll('*[data-class="railroad"]')[0];
           var trainsVm = trains.map(function(d){
               var interval = true;
               var reverse = false;
@@ -661,10 +661,10 @@ function (q, jq/*,ko*/,d3,dom) {
               for(var i = 0,e = railRoadMap.length;i < e;++i){
                 var r = d3.select(railRoadMap[i]);
                 var rw = d['odpt:railway'];
-                if(r.attr('sf:from') == d['odpt:fromStation']['owl:sameAs'] && r.attr('sf:to')  == d['odpt:toStation']['owl:sameAs']){
+                if(r.attr('data-from') == d['odpt:fromStation']['owl:sameAs'] && r.attr('data-to')  == d['odpt:toStation']['owl:sameAs']){
                   cr = r;
                   break;
-                } else if(r.attr('sf:from') == d['odpt:toStation']['owl:sameAs'] && r.attr('sf:to')  == d['odpt:fromStation']['owl:sameAs']){
+                } else if(r.attr('data-from') == d['odpt:toStation']['owl:sameAs'] && r.attr('data-to')  == d['odpt:fromStation']['owl:sameAs']){
                   cr = r;
 //                  reverse = true;
                   break;
@@ -677,7 +677,7 @@ function (q, jq/*,ko*/,d3,dom) {
  
               reverse = lineInfos[d['odpt:railway']][d['odpt:railDirection']];
 
-              //if (cr.attr('sf:reverse') == 1) {
+              //if (cr.attr('data-reverse') == 1) {
               //  reverse = !reverse;
               //};
 
@@ -741,7 +741,7 @@ function (q, jq/*,ko*/,d3,dom) {
                 var tls = d.transition;
                 var tl = tls.totalLength/2;
                 var reverse = tls.reverse ;//tls.interval?tls.reverse:d.reverse;
-                if (parseInt(tls.path.attr('sf:reverse'),10) == 1) { reverse = !reverse;}
+                if (parseInt(tls.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
  
                 if(reverse){
                   pt = tls.path.node().getPointAtLength(tl - tl * t);
@@ -764,7 +764,7 @@ function (q, jq/*,ko*/,d3,dom) {
               var tls = d.transition;
               var tl = tls.totalLength/2;
               var reverse = tls.reverse ;//tls.interval?tls.reverse:d.reverse;
-              if (parseInt(tls.path.attr('sf:reverse'),10) == 1) { reverse = !reverse;}
+              if (parseInt(tls.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
  
               if(reverse){
                 pts = tls.path.node().getPointAtLength(tl - tl * t);
@@ -789,7 +789,7 @@ function (q, jq/*,ko*/,d3,dom) {
                 var pt;
                 var tl = d.totalLength/2;
                 var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
-                if (parseInt(d.path.attr('sf:reverse'),10) == 1) { reverse = !reverse;}
+                if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
                 if(reverse){
                   pt = d.path.node().getPointAtLength(d.totalLength - tl * t);
                 } else {
@@ -805,7 +805,7 @@ function (q, jq/*,ko*/,d3,dom) {
                 var pts,pte;
                 var tl = d.totalLength/2;
                 var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
-                if (parseInt(d.path.attr('sf:reverse'),10) == 1) { reverse = !reverse;}
+                if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
                 if(reverse){
                   pts = d.path.node().getPointAtLength(d.totalLength - tl * t);
                   pte = d.path.node().getPointAtLength(d.totalLength - tl * (t + 0.0001));
@@ -836,7 +836,7 @@ function (q, jq/*,ko*/,d3,dom) {
             var tl = d.totalLength/2;
             pts = d.path.node().getPointAtLength(tl);
             var reverse = d.reverse;//d.interval?d.reverse:d.transition.reverse;
-            if (parseInt(d.path.attr('sf:reverse'),10) == 1) { reverse = !reverse;}
+            if (parseInt(d.path.attr('data-reverse'),10) == 1) { reverse = !reverse;}
             if(reverse){
               pte = d.path.node().getPointAtLength(tl - tl * 0.0001);
             } else {
